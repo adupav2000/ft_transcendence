@@ -5,7 +5,7 @@ export class AppController {
   constructor() {}
 
   @Get()
-  getProfile(@Request() req) {
-    return req;
+  getProfile() {
+    return "Je te vois";
   }
 }
