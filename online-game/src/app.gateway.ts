@@ -58,8 +58,6 @@ export class AppGateway implements OnGatewayInit, OnGatewayConnection, OnGateway
 	afterInit(server: Server) {
 		this.logger.log("Socket initizialed")
 
-		if (this.players?.length == 1 && !this.isEmittingUpdates)
-			this.emitUpdates();
 	}
 
 	handleConnection(client: Socket){
@@ -73,6 +71,8 @@ export class AppGateway implements OnGatewayInit, OnGatewayConnection, OnGateway
 			console.log(this.players[i]);
 		}
 		*/
+		if (this.players?.length == 1 && !this.isEmittingUpdates)
+			this.emitUpdates();
 		
 		//this.server.emit("clientConnection");
 		//this.logger.log(`Client connected: ${client.id}`)
