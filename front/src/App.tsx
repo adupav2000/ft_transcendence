@@ -1,32 +1,37 @@
-import React from 'react';
-import {io, Socket} from 'socket.io-client';
-import './App.css';
-import Pong from './src/Components/Pong/pong';
-
-const socket:any = io('http://localhost:3001/')
+import { useEffect, useState } from 'react'
+import { io, Socket } from 'socket.io-client'
+import reactLogo from './assets/react.svg'
+import './App.css'
 
 function App() {
+  const [socket, setSocket] = useState<Socket>()
 
-	function sendMessage()
-	{
-		console.log("send Chaud")
-		socket.emit('msgToServer', "Chaud");
-	}
+  const sendMessage = () => {
+    socket?.emit("msgToServer", "chaud");
+    console.log("Sending chaud");
+  }
 
-	function receiveMessage(msg:string)
-	{
-		console.log(`recv ${msg}`)
-	}
+  useEffect(() => {
+    const newSocket = io("http://localhost:8001");
+    setSocket(newSocket);
+  }, [setSocket])
 
-	return (
-		<div className="App">
-			<button style={{
-				height: "300px",
-				width: "300px"
-			}} onClick={sendMessage}></button>
-			<Pong/>
-		</div>
-	);
+  useEffect(() => {
+    socket?.on("msgToClient", (msg) => {
+      console.log(`Received ${msg}`);
+    })
+
+  })
+
+  return (
+    <div className="App">
+      <button style={{
+        height: "300px",
+        width: "300px"
+      }} onClick={sendMessage}></button>
+
+    </div>
+  );
 }
 
-export default App;
+export default App
