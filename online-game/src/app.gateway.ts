@@ -1,5 +1,5 @@
 import { Logger } from '@nestjs/common';
-import { OnGatewayConnection, OnGatewayDisconnect, OnGatewayInit, SubscribeMessage, WebSocketGateway, WsResponse } from '@nestjs/websockets';
+import { OnGatewayConnection, OnGatewayDisconnect, OnGatewayInit, SubscribeMessage, WebSocketGateway, WebSocketServer, WsResponse } from '@nestjs/websockets';
 import { Socket, Server } from 'socket.io';
 
 // const options = {
@@ -21,18 +21,28 @@ import { Socket, Server } from 'socket.io';
 export class AppGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
 {
 	
+	@WebSocketServer()
+	server;
+
 	private logger: Logger = new Logger('AppGateway');
 
 	afterInit(server: Server) {
-		this.logger.log("initialized")
+		this.logger.log("Socket initizialed")
 	}
 
 	handleConnection(client: Socket){
+		this.server.emit("clientConnection");
 		this.logger.log(`Client connected: ${client.id}`)
 	}
 
 	handleDisconnect(client: Socket) {
+		this.server.emit("clientDisconnected");
 		this.logger.log(`Client disconnected: ${client.id}`)
+	}
+
+	@SubscribeMessage('positionChanged')
+	handlePositionChanged(client: Socket, position: number) {
+		client.broadcast.emit('positionChanged', position);
 	}
 
 	@SubscribeMessage('msgToServer')

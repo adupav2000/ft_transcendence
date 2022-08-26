@@ -6,6 +6,6 @@ export class AppController {
 
   @Get()
   getProfile() {
-    return "Je te vois";
+    return "Hello World";
   }
 }
