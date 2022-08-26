@@ -17,7 +17,7 @@ import { Socket, Server } from 'socket.io';
 // 	},
 //   }
 
-@WebSocketGateway(/*options*/)
+@WebSocketGateway(8001, { cors: '*' })
 export class AppGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
 {
 	
@@ -37,6 +37,8 @@ export class AppGateway implements OnGatewayInit, OnGatewayConnection, OnGateway
 
 	@SubscribeMessage('msgToServer')
 	handleMessage(client: Socket, text: string): WsResponse<string> {
-	return {event: 'msgToClient', data: text};
+		console.log('Message received\n');
+		//client.emit('msgToClient', "c'est chaud la");
+	return {event: 'msgToClient', data: "c chaud la" };
 	}
 }
