@@ -42,17 +42,17 @@ export class AppGateway implements OnGatewayInit, OnGatewayConnection, OnGateway
 
 	emitUpdates() {
 		this.isEmittingUpdates = true;
-
+		console.log(this.players);
+		
 		if (this.stateChanged)
 		{
 			this.stateChanged = false;
+			console.log('Emit update');
 			this.server.emit('stateUpdate', this.players);
 		}
 
 		if (this.players?.length > 0)
-			setTimeout(this.emitUpdates, 300);
-		else
-			this.isEmittingUpdates = false;
+			setTimeout(() => this.emitUpdates(), 30);
 	}
 
 	afterInit(server: Server) {
@@ -95,6 +95,7 @@ export class AppGateway implements OnGatewayInit, OnGatewayConnection, OnGateway
 			if (this.players[i].id == data.id)
 				this.players[i].pos = data.position; 
 		}
+		//console.log('Position changed');
 		//client.broadcast.emit('positionChanged', position);		
 	}
 

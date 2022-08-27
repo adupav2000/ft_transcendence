@@ -24,35 +24,46 @@ type gameDataT = {
 	player2score:number
 }
 
+type playerT = {
+	id:string,
+    position:number
+}
+
+type playersT = [{
+	id:string,
+    position:number
+}]
+
 export default function Pong()
 {
     const [position, setPosition] = React.useState(50)
     const [computerPosition, setComputerPosition] = React.useState(50)
+	const [players, setPlayers] = React.useState<playersT>()
 	const [gameState, setGameState] = React.useState<gameStateT>({
         isPlaying: false,
         scoreToWin: 3,
         playerScore: 0,
         computerScore: 0
     })
-
 	const [socket, setSocket] = useState<Socket>()
 
-  const sendMessage = (position:number) => {
-    socket?.emit("positionChanged", position);
-    console.log("Sending chaud");
+  	const sendPosition = (player:playerT) => {
+    socket?.emit("positionChanged", player);
   }
 
-  useEffect(() => {
-    const newSocket = io("http://localhost:8001");
-    setSocket(newSocket);
-  }, [setSocket])
+  	function handleUpdate(players:playersT)
+	{
+		console.log(players.length);
+		setPlayers(players)
+	}
 
-  useEffect(() => {
-    socket?.on("positionChanged", (otherPosition:number) => {
-      console.log(`Received ${otherPosition}`);
-    })
-
-  })
+	useEffect(() => {
+		const newSocket = io("http://localhost:8001");
+		setSocket(newSocket);
+		newSocket.on("connect", () => {
+			newSocket.on('stateUpdate',(players:playersT) => handleUpdate(players))
+		})
+	}, [])
 
 	function handleStart()
 	{
@@ -72,6 +83,7 @@ export default function Pong()
 		{
         	const value:number = (event.clientY / window.innerHeight) * 100
         	setPosition(value)
+			sendPosition({id: socket!.id, position: value})
 		}
     }
 
@@ -141,7 +153,7 @@ export default function Pong()
 		return false
 	}
 
-    function updateGame(time:number)
+    async function updateGame(time:number)
     {
 		//GAMELOOP
 		//IA LOGIC JUST FOLOWING THE Y COORD OF THE BALL
@@ -153,8 +165,10 @@ export default function Pong()
 			
     }
 
-	useAnimationFrame(updateGame)
-
+	//useAnimationFrame(updateGame)
+	const playersElements:any = players?.map((elem, index) =>
+		<Paddle key={index} className={index == 0 ? "left" : "right"} position={elem.pos} player={index == 0 ? true :false}/>
+		)
     return (
         <div className="pong" onMouseMove={handleMouseMove}>
             {
@@ -164,9 +178,9 @@ export default function Pong()
 					</button>
 			}
             <Score playerScore={gameState.playerScore} computerScore={gameState.computerScore}/>
-            <Ball isPlaying={gameState.isPlaying}/>
-            <Paddle id="playerPaddle" className="left" position={position} player={true}/>
-            <Paddle id="computerPaddle" className="right" position={computerPosition} player={false}/>
+			{playersElements}
         </div>
     )
 }
+
+//            <Ball isPlaying={gameState.isPlaying}/>
