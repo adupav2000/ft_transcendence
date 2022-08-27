@@ -19,19 +19,32 @@ import { string } from 'yargs';
 //   }
 
 interface Player { id: string, pos: number}
+interface Ball {
+	x: number,
+	y: number,
+    dirX: number,
+    dirY: number,
+    speed: number,
+	delta: number
+}
 
 @WebSocketGateway(8001, { cors: '*' })
 export class AppGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
 {
 
-	players: Player[] = [];
-	stateChanged = false;
-	isEmittingUpdates = false;
+	//players: Player[] = [];
+	private gameData: { 
+		players: Player[],
+		ball: Ball
+	}
+	private stateChanged = false;
+	private isEmittingUpdates = false;
+
+
+	private logger: Logger = new Logger('AppGateway');
 
 	@WebSocketServer()
 	server;
-
-	private logger: Logger = new Logger('AppGateway');
 
 	createClient(id: string) {
 		return {
@@ -42,36 +55,44 @@ export class AppGateway implements OnGatewayInit, OnGatewayConnection, OnGateway
 
 	emitUpdates() {
 		this.isEmittingUpdates = true;
-		console.log(this.players);
+		//console.log(this.players);
 		
 		if (this.stateChanged)
 		{
 			this.stateChanged = false;
-			console.log('Emit update');
-			this.server.emit('stateUpdate', this.players);
+			//this.server.emit('stateUpdate', this.gameData?.players);
+			this.server.emit('stateUpdate', this.gameData);
 		}
 
-		if (this.players?.length > 0)
+		if (this.gameData?.players?.length > 0)
 			setTimeout(() => this.emitUpdates(), 30);
 	}
 
 	afterInit(server: Server) {
 		this.logger.log("Socket initizialed")
-
+		
+		this.gameData = {
+			players: [],
+			ball:
+				{
+					x: 0,
+					y: 0,
+					dirX: 0,
+					dirY: 0,
+					speed: 0,
+					delta: 0,
+				}
+		}
 	}
 
 	handleConnection(client: Socket){
 		console.log(`Client ${client.id} joined server`);
+		
 		let newPlayer: Player = {id: client.id, pos: 50};
-		//console.log(newPlayer);
-		this.players?.push(newPlayer);
-		/*
-		for (let i = 0; i < this.players.length; i++)
-		{
-			console.log(this.players[i]);
-		}
-		*/
-		if (this.players?.length == 1 && !this.isEmittingUpdates)
+
+		this.gameData?.players?.push(newPlayer);
+		console.log(this.gameData?.players?.length )
+		if (this.gameData?.players?.length == 1 && !this.isEmittingUpdates)
 			this.emitUpdates();
 		
 		//this.server.emit("clientConnection");
@@ -87,22 +108,23 @@ export class AppGateway implements OnGatewayInit, OnGatewayConnection, OnGateway
 		//this.logger.log(`Client disconnected: ${client.id}`)
 	}
 
-	@SubscribeMessage('positionChanged')
-	handlePositionChanged(client: Socket, data: { id: string, position: number}) {
+	@SubscribeMessage('ballPosChanged')
+	handleBallPosition(client: Socket, ball: Ball)
+	{
 		this.stateChanged = true;
-		for (let i = 0; i < this.players.length; i++)
-		{
-			if (this.players[i].id == data.id)
-				this.players[i].pos = data.position; 
-		}
-		//console.log('Position changed');
-		//client.broadcast.emit('positionChanged', position);		
+		this.gameData.ball = ball;
 	}
 
-	@SubscribeMessage('msgToServer')
-	handleMessage(client: Socket, text: string): WsResponse<string> {
-		console.log('Message received\n');
-		//client.emit('msgToClient', "c'est chaud la");
-	return {event: 'msgToClient', data: "c chaud la" };
+
+	@SubscribeMessage('playePosChanged')
+	handlePlayerPosition(client: Socket, data: { id: string, position: number}) {
+		this.stateChanged = true;
+		//console.log('positionChanged');
+		for (let i = 0; i < this.gameData?.players.length; i++)
+		{
+			if (this.gameData.players[i].id == data.id)
+				this.gameData.players[i].pos = data.position; 
+		}
 	}
+
 }
