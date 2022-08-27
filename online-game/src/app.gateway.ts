@@ -116,7 +116,7 @@ export class AppGateway implements OnGatewayInit, OnGatewayConnection, OnGateway
 	}
 
 
-	@SubscribeMessage('playePosChanged')
+	@SubscribeMessage('playerPosChanged')
 	handlePlayerPosition(client: Socket, data: { id: string, position: number}) {
 		this.stateChanged = true;
 		//console.log('positionChanged');
