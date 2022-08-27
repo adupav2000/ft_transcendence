@@ -24,15 +24,31 @@ type gameDataT = {
 	player2score:number
 }
 
+type ballInfoT = {
+    x: number,
+    y: number,
+    dirX: number,
+    dirY: number,
+    speed: number,
+	delta: number
+}
+
 type playerT = {
 	id:string,
-    position:number
+    position:number,
+	score:number,
 }
 
 type playersT = [{
 	id:string,
-    position:number
+    position:number,
+	score:number,
 }]
+
+type updateInfoT = {
+	players: playersT,
+	ball: ballInfoT
+}
 
 export default function Pong()
 {
@@ -48,33 +64,41 @@ export default function Pong()
 	const [socket, setSocket] = useState<Socket>()
 
   	const sendPosition = (player:playerT) => {
-    socket?.emit("positionChanged", player);
+    socket?.emit("playerPosChanged", player);
   }
 
-  	function handleUpdate(players:playersT)
-	{
-		console.log(players.length);
-		setPlayers(players)
+  const joinQueue = () => {
+	socket?.emit("joinedQueue");
+	socket?.emit("startGame");
+
+  }
+
+  function handleUpdate(updateInfo:updateInfoT)
+  {
+	  console.log(updateInfo.players);
+	  setPlayers(updateInfo.players)
+	  //setBall(updateInfo.ball)
+  }
+
+	const handleStart = () => {
+		console.log("Gameready")
+		setGameState((oldState) => ({
+			...oldState,
+		 	isPlaying: true
+			})
+		)
+
 	}
 
 	useEffect(() => {
-		const newSocket = io("http://localhost:8001");
+		const newSocket = io("http://10.11.10.3:8002");
 		setSocket(newSocket);
 		newSocket.on("connect", () => {
-			newSocket.on('stateUpdate',(players:playersT) => handleUpdate(players))
+			
+			newSocket.on('gameReady', handleStart)
+			newSocket.on('stateUpdate',(updateInfo:updateInfoT) => handleUpdate(updateInfo))
 		})
 	}, [])
-
-	function handleStart()
-	{
-		//SET THE DEFAULT VARIABLE
-		setGameState((oldGameState) => ({
-			...oldGameState,
-			isPlaying: true,
-			playerScore: 0,
-        	computerScore: 0
-		}))
-	}
 
     function handleMouseMove(event:React.MouseEvent<HTMLDivElement>)
     {
@@ -83,7 +107,7 @@ export default function Pong()
 		{
         	const value:number = (event.clientY / window.innerHeight) * 100
         	setPosition(value)
-			sendPosition({id: socket!.id, position: value})
+			sendPosition({id: socket!.id, position: value, score: 0})
 		}
     }
 
@@ -173,7 +197,7 @@ export default function Pong()
         <div className="pong" onMouseMove={handleMouseMove}>
             {
 				!gameState.isPlaying && 
-                	<button className="buttonStart" onClick={handleStart}>
+                	<button className="buttonStart" onClick={joinQueue}>
 						Start Game
 					</button>
 			}

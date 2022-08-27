@@ -4,9 +4,10 @@ import { Socket, Server } from 'socket.io';
 import { string } from 'yargs';
 import { LobbyManager } from './lobby/lobby.manager';
 import { AuthenticatedSocket, Ball, Player } from './game.type';
+import { GameInstance } from './game.instance';
 
 
-@WebSocketGateway(8001, { cors: '*' })
+@WebSocketGateway(8002, { cors: '*' })
 export class GameGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
 {
 
@@ -31,7 +32,9 @@ export class GameGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
 
 	emitUpdates() {
 		this.isEmittingUpdates = true;
-		
+		//console.log(this.gameData.players)
+        //console.log(this.stateChanged);
+
 		if (this.stateChanged)
 		{
 			this.stateChanged = false;
@@ -64,16 +67,14 @@ export class GameGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
 		console.log(`Client ${client.id} joined server`);
 		
 		this.lobbyManager.initializeSocket(client as AuthenticatedSocket);
-
-		/*
 		
-		let newPlayer: Player = {id: client.id, pos: 50};
+		// let newPlayer: Player = {id: client.id, pos: 50, score: 0, socket: client};
 
-		this.gameData?.players?.push(newPlayer);
-		console.log(this.gameData?.players?.length )
-		if (this.gameData?.players?.length == 1 && !this.isEmittingUpdates)
-			this.emitUpdates();
-		*/
+		// this.gameData?.players?.push(newPlayer);
+		// console.log(this.gameData?.players?.length )
+		// if (this.gameData?.players?.length == 1 && !this.isEmittingUpdates)
+		// 	this.emitUpdates();
+		
 	}
 
 	handleDisconnect(client: AuthenticatedSocket) {
@@ -82,7 +83,6 @@ export class GameGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
 		
 	}
 
-	//Futur startGame event
 	@SubscribeMessage('createLobby')
 	createLobby(client: AuthenticatedSocket)
 	{
@@ -93,15 +93,23 @@ export class GameGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
 	}
 
 	@SubscribeMessage('joinedQueue')
-	joinQueue(client: AuthenticatedSocket)
+	joiningQueue(client: AuthenticatedSocket)
 	{
+		console.log("Client in queue")
 		this.lobbyManager.joinQueue(client);
 	}
 
+	@SubscribeMessage('startGame')
+	launchGame(client: AuthenticatedSocket)
+	{
+		console.log('client.id')
+		client.data.lobby.startGame();
+	}
 
 	@SubscribeMessage('ballPosChanged')
 	handleBallPosition(client: Socket, ball: Ball)
 	{
+        console.log('In ballchanged');
 		this.stateChanged = true;
 		this.gameData.ball = ball;
 	}

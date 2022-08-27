@@ -1,25 +1,38 @@
 import { Lobby } from "./lobby/lobby";
-import { AuthenticatedSocket, Ball, GameState, Player } from "./game.type";
+import { AuthenticatedSocket, Ball, GameData, GameState, Player } from "./game.type";
+import { Interval } from "@nestjs/schedule";
 
 export class GameInstance
 {
     private stateChanged = false;
 	private isEmittingUpdates = false;
     
-    private gameData: {
-        players: Player[],
-        ball: Ball,
-    }
+    private gameData:   GameData;
+
+    private state:       GameState;
 
     constructor(public lobby: Lobby) {
+        this.gameData = {
+            players: [],
+            ball: {
+                x: 0,
+                y: 0,
+                dirX: 0,
+                dirY: 0,
+                speed: 0,
+                delta: 0,
+            }
+        }
     }
 
+    //@Interval(30)
     emitUpdateLoop()
     {
-        if (this.stateChanged)
+        this.state = GameState.Started;
+        if (this.state == GameState.Started)
         {
-            this.stateChanged = false;
-            this.lobby.sendToUsers("stateUpdate", this.gameData);
+            //console.log(this.gameData);
+            this.lobby.sendUpdate("stateUpdate", this.gameData);
         }
 
 		if (this.gameData?.players?.length > 0)
@@ -29,14 +42,19 @@ export class GameInstance
 
     public start()
     {
+        this.state = GameState.Started;
         this.emitUpdateLoop();
-        this.lobby.state = GameState.Started;
     }
 
     public stop()
     {
         this.gameData.players = [];
-        this.lobby.state = GameState.Stopped;
+        this.state = GameState.Stopped;
+    }
+
+    public addPlayer(player: Player)
+    {
+        this.gameData.players.push(player);
     }
 
     public playerMoved(client: AuthenticatedSocket, data: { id: string, position: number})

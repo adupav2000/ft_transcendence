@@ -1,6 +1,7 @@
 import { Cron } from "@nestjs/schedule";
 import { WebSocketServer } from "@nestjs/websockets";
 import { Server } from "socket.io";
+import { GameInstance } from "../game.instance";
 import { AuthenticatedSocket, GameState, LobbyQueue } from "../game.type";
 import { Lobby } from "./lobby";
 
@@ -40,16 +41,18 @@ export class LobbyManager
         if (!this.avalaibleLobbies.isEmpty)
             lobby = this.avalaibleLobbies.dequeue();
         else
+        {
             lobby = this.createLobby();
+            this.avalaibleLobbies.enqueue(lobby);
+        }
 
         lobby.addClient(client);
     }
-
     public joinLobby(lobbyId: string, client: AuthenticatedSocket): void
     {
         this.lobbies[lobbyId].addClient(client);
     }
-
+/*
     @Cron('*\/5 * * * *')
     private lobbiesCleaner(): void
     {
@@ -58,5 +61,5 @@ export class LobbyManager
                 this.lobbies.delete[lobby.id];
         }
     }
-
+*/
 }

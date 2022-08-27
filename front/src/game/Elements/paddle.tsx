@@ -6,6 +6,11 @@ type PaddleProps = {
     className: string,
     position: number,
 	player: boolean
+} & typeof defaultProps;
+
+const defaultProps = {
+	isPlaying: false,
+	position: 50,
 }
 
 export default function Paddle(props: PaddleProps)
@@ -29,3 +34,5 @@ export default function Paddle(props: PaddleProps)
         </div>
     )
 }
+
+Paddle.defaultProps = defaultProps;

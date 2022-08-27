@@ -5,8 +5,7 @@ export interface Player
 { 
     id: string,
     pos: number,
-    score: number,
-    socket: Socket
+    score: number
 }
 
 export interface Ball {
@@ -16,6 +15,11 @@ export interface Ball {
     dirY: number,
     speed: number,
 	delta: number
+}
+
+export interface GameData{
+  players: Player[],
+  ball: Ball,
 }
 
 
