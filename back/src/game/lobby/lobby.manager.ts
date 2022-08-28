@@ -1,3 +1,4 @@
+import { NotFoundException } from "@nestjs/common";
 import { Cron, Interval } from "@nestjs/schedule";
 import { WebSocketServer } from "@nestjs/websockets";
 import { Server } from "socket.io";
@@ -49,9 +50,10 @@ export class LobbyManager
         lobby.addClient(client);
     }
 
-    public joinLobby(lobbyId: string, client: AuthenticatedSocket): void
+    public joinLobby(lobbyId: string, client: AuthenticatedSocket)
     {
-        this.lobbies[lobbyId].addClient(client);
+        if (this.lobbies[lobbyId]?.addClient(client) == undefined)
+            throw new NotFoundException("This lobby does not exist anymore");
     }
     /*
     * Retourne l'id de tous les lobbies en game et l'id des 2 joueurs
@@ -75,7 +77,7 @@ export class LobbyManager
     }
 
     //Deletes deletes stopped lobbies every 5 minutes
-    @Interval(3 * 1000)
+    @Interval(60 * 1000)
     private lobbiesCleaner(): void
     {
         for (let i = 0; i < this.avalaibleLobbies.length; i++) {

@@ -32,4 +32,5 @@ export type AuthenticatedSocket = Socket & {
 export enum GameState {
   Started,
   Stopped,
+  Waiting
 }

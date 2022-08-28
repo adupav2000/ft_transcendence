@@ -37,17 +37,34 @@ export class Lobby
             
             if (this.nbPlayers == 1)
             client.emit("watingForOpponent");
-            // this..gameInstance.state = GameState.Waiting;
-            // else { 
             this.sendToUsers("gameReady", "Game is ready");
         }
         /*
-        else 
-        {
-            this.clients.set(client.id, client.socket);
-        }
+        this.clients.set(client.id, client.socket);
         client.join(this.id);
         client.data.lobby = this;
+
+        if (this.nbPlayers < 2)
+        {
+            let newPlayer: Player = {
+                id: client.id,
+                pos: 50,
+                score: 0
+            }
+            this.gameInstance.addPlayer(newPlayer);
+            this.nbPlayers++;
+            
+            if (this.nbPlayers == 1)
+            {
+                client.emit("watingForOpponent");
+                this.gameInstance.state = GameState.Waiting; 
+            }
+            else
+            {
+                this.gameIntance.state = GameState.Started;
+                this.sendToUsers("gameReady", "Game is ready");
+            }
+        }
         */
 
 
@@ -61,10 +78,8 @@ export class Lobby
 
     public removeClient(client: AuthenticatedSocket)
     {
-        console.log("In remove");
         if (this.gameInstance.isPlayer(client.id))
         {
-            console.log("In player");
             this.players.delete(client.id)
             client.data.lobby = null;
             client.leave(this.id);
@@ -73,19 +88,27 @@ export class Lobby
             this.players.forEach((player, id) => {
                 this.players.delete(id);
             })
-            console.log(this.players.size);
             this.gameInstance.stop();
             this.nbPlayers = 0;
             this.state = GameState.Stopped;
             this.sendToUsers('gameStopped', "");
         }
-        /* Delete spectator
-        else
-        {
-            this.clients.delete(client.id);
-            
-        }
+        /*
+
+        client.data.lobby = null;
         client.leave(this.id);
+        this.clients.delete(client.id);
+        if (this.gameInstance.isPlayer(client.id))
+        {
+            this.players.forEach((user, id) => {
+                this.clients.delete(id);
+            })
+
+            this.gameInstance.stop();
+            this.nbPlayers = 0;
+            this.state = GameState.Stopped;          
+            this.sendToUsers('gameStopped', "");  
+        }
         */        
 
     }

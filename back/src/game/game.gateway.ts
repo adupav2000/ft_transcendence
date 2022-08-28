@@ -52,6 +52,22 @@ export class GameGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
 		this.lobbyManager.joinQueue(client);
 	}
 
+	@SubscribeMessage('spectacteGame')
+	spectateGame(client: AuthenticatedSocket, lobbyId: string)
+	{
+		try {
+			this.lobbyManager.joinLobby(lobbyId, client);
+		}
+		catch (error) { client.emit('lobbyNotFound', error.message ) }
+	}
+
+	@SubscribeMessage('getActiveGames')
+	getActiveGames(client: AuthenticatedSocket)
+	{
+		client.emit('activeGames', this.lobbyManager.getActiveLobbies());
+	}
+
+
 	@SubscribeMessage('startGame')
 	launchGame(client: AuthenticatedSocket)
 	{
