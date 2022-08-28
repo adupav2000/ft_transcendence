@@ -48,9 +48,30 @@ export class LobbyManager
 
         lobby.addClient(client);
     }
+
     public joinLobby(lobbyId: string, client: AuthenticatedSocket): void
     {
         this.lobbies[lobbyId].addClient(client);
+    }
+    /*
+    * Retourne l'id de tous les lobbies en game et l'id des 2 joueurs
+    * Va servir pour afficher toutes les parties en cours et les regarder
+    * Gerer le cas ou il n'y a pas de parties en cours
+    */
+    public getActiveLobbies()
+    {
+        let res: [{lobbyId: string, playersId: string[]}];
+
+        this.lobbies.forEach((lobby, id) => {
+            if (lobby.state == GameState.Started && lobby.nbPlayers == 2)
+            {
+                res.push({
+                    lobbyId: id,
+                    playersId: lobby.playersId(),
+                })
+            }
+        });
+        
     }
 
     //Deletes deletes stopped lobbies every 5 minutes

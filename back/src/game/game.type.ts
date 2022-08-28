@@ -19,7 +19,7 @@ export interface Ball {
 
 export interface GameData{
   players: Player[],
-  ball: Ball,
+  ball: Ball;
 }
 
 
