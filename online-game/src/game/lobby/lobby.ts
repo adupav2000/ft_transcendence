@@ -71,7 +71,7 @@ export class Lobby
     }
     public sendUpdate(event: string, data: GameData)
     {
-        this.server.emit(event, data);
+        this.server.to(this.id).emit(event, data);
     }
 
     public sendToUsers(event: string, data: any)

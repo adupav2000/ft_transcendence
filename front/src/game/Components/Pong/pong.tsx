@@ -91,7 +91,7 @@ export default function Pong()
 	}
 
 	useEffect(() => {
-		const newSocket = io("http://10.11.10.3:8002");
+		const newSocket = io("http://localhost:8002");
 		setSocket(newSocket);
 		newSocket.on("connect", () => {
 			
