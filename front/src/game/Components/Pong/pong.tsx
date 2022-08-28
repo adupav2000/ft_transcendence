@@ -75,7 +75,6 @@ export default function Pong()
 
   function handleUpdate(updateInfo:updateInfoT)
   {
-	  console.log(updateInfo.players);
 	  setPlayers(updateInfo.players)
 	  //setBall(updateInfo.ball)
   }

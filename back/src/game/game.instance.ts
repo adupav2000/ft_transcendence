@@ -28,7 +28,6 @@ export class GameInstance
     //@Interval(30)
     emitUpdateLoop()
     {
-        this.state = GameState.Started;
         if (this.state == GameState.Started)
         {
             //console.log(this.gameData);

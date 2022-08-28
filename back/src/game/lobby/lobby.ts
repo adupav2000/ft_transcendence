@@ -8,18 +8,13 @@ export class Lobby
     public readonly id:             string = v4();
     public          nbPlayers:      number = 0;
     public readonly inviteMode:     boolean;
-    public          state:          GameState;
+    public          state:          GameState = GameState.Stopped;
 
     public readonly players:        Map<string, Player> = new Map<string, Player>();
     public readonly gameInstance:   GameInstance = new GameInstance(this);
 
     
-    constructor( 
-        private server: Server
-         ) {
-
-            //this.gameInstance = new GameInstance(this);
-        }
+    constructor    ( private server: Server ) {}
 
     public addClient(client: AuthenticatedSocket): void
     {
@@ -37,19 +32,16 @@ export class Lobby
         this.nbPlayers++;
 
         if (this.nbPlayers == 1)
-           client.emit("watingForOpponent"); 
-        //this.gameInstance.start();//Pour que le front affiche un ecran d'attente
+           client.emit("watingForOpponent");
+        // this..gameInstance.state = GameState.Waiting;
+        // else { 
         this.sendToUsers("gameReady", "Game is ready");
-        console.log('In gameStarting');
 
-        /*else
-        {
-        }*/
+
     }
 
     public startGame()
     {
-        console.log("In startGame")
         this.gameInstance.start();
         this.state = GameState.Started;
     }
@@ -62,11 +54,13 @@ export class Lobby
         this.nbPlayers--;
         
         //this.sendToUsers('ennemyLeft', "Ennemy left the game") //Pour que le front arrete le jeu
-        for (let i = 0; i < this.players.size; i++)
-            this.players.delete(this.players[i].id);
-
+        this.players.forEach((player, id) => {
+            this.players.delete(id);
+        })
+        console.log(this.players.size);
         this.gameInstance.stop();
         this.state = GameState.Stopped;
+        this.sendToUsers('gameStopped', "");        
 
     }
     public sendUpdate(event: string, data: GameData)
@@ -76,7 +70,7 @@ export class Lobby
 
     public sendToUsers(event: string, data: any)
     {
-        this.server.emit(event, data);
+        this.server.to(this.id).emit(event, data);
     }
 
 }
