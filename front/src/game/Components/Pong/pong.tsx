@@ -45,7 +45,8 @@ type gameCollionInfoT = {
 	player2PaddleZone:DOMRect,
 	ballZone:DOMRect,
 	borderZone:DOMRect
-	gameArea:number
+	innerHeight:number
+	innerWidth:number
   }
 
 type playersT = [playerT]
@@ -67,7 +68,8 @@ export default function Pong()
 		player2PaddleZone:  new DOMRect(),
 		ballZone:  new DOMRect(),
 		borderZone:  new DOMRect(),
-		gameArea: 0
+		innerHeight: 0,
+		innerWidth: 0
 	})
 	const [gameState, setGameState] = React.useState<gameStateT>({
         isPlaying: false,
@@ -108,7 +110,8 @@ export default function Pong()
 				player2PaddleZone: utils.getPaddleContactZone("player2"),
 				ballZone: utils.getContactZone(),
 				borderZone: utils.getContactZone(),
-				gameArea: window.innerHeight
+				innerHeight: window.innerHeight,
+				innerWidth: window.innerWidth
 			}
 			setGameCollisonInfo(collisionInfo)
 		}
@@ -130,7 +133,7 @@ export default function Pong()
 
 		
 	useEffect(() => {
-		const newSocket = io("http://10.11.10.3:8002");
+		const newSocket = io("http://localhost:8002");
 		socket = newSocket;
 		newSocket.on("connect", () => {
 			console.log(socket)
@@ -142,7 +145,8 @@ export default function Pong()
 				player2PaddleZone: utils.getPaddleContactZone("player2"),
 				ballZone: utils.getContactZone(),
 				borderZone: utils.getContactZone(),
-				gameArea: window.innerHeight
+				innerHeight: window.innerHeight,
+				innerWidth: window.innerWidth
 			}))
 		})
 		return () => {

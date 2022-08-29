@@ -11,15 +11,15 @@ export class Lobby
     public readonly inviteMode:     boolean;
     public          state:          GameState = GameState.Stopped;
 
-    public readonly players:        Map<string, Player> = new Map<string, Player>();
+    //public readonly players:        Map<string, Player> = new Map<string, Player>();
     public readonly gameInstance:   GameInstance = new GameInstance(this);
 
-    //private         clients:        Map<string, Socket> = new Map<string, Socket>();
+    public         clients:        Map<string, AuthenticatedSocket> = new Map<string, AuthenticatedSocket>();
 
     constructor    ( private server: Server ) {}
 
     public addClient(client: AuthenticatedSocket, player:Player): void
-    {
+    {/*
         if (this.nbPlayers < 2)
         {
             let newPlayer: Player = {
@@ -39,8 +39,8 @@ export class Lobby
             client.emit("watingForOpponent");
             this.sendToUsers("gameReady", "Game is ready");
         }
-        /*
-        this.clients.set(client.id, client.socket);
+        */
+        this.clients.set(client.id, client);
         client.join(this.id);
         client.data.lobby = this;
         
@@ -61,23 +61,24 @@ export class Lobby
             }
             else
             {
-                this.gameIntance.state = GameState.Started;
+                this.gameInstance.state = GameState.Started;
                 this.sendToUsers("gameReady", "Game is ready");
             }
         }
-        */
+        
 
 
     }
 
     public startGame()
     {
+        console.log('In startGame');
         this.gameInstance.start();
         this.state = GameState.Started;
     }
 
     public removeClient(client: AuthenticatedSocket)
-    {
+    {/*
         if (this.gameInstance.isPlayer(client.id))
         {
             this.players.delete(client.id)
@@ -92,15 +93,15 @@ export class Lobby
             this.nbPlayers = 0;
             this.state = GameState.Stopped;
             this.sendToUsers('gameStopped', "");
-        }
-        /*
+        }*/
+        
 
         client.data.lobby = null;
         client.leave(this.id);
         this.clients.delete(client.id);
         if (this.gameInstance.isPlayer(client.id))
         {
-            this.players.forEach((user, id) => {
+            this.clients.forEach((user, id) => {
                 this.clients.delete(id);
             })
 
@@ -109,7 +110,7 @@ export class Lobby
             this.state = GameState.Stopped;          
             this.sendToUsers('gameStopped', "");  
         }
-        */        
+               
 
     }
 

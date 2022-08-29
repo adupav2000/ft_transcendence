@@ -32,6 +32,11 @@ export interface GameData{
   gameCollisionInfo:gameCollionInfoT
 }
 
+export interface GameSettings {
+  scoreToWin: number,
+  
+}
+
 
 export type AuthenticatedSocket = Socket & {
 	data: {
