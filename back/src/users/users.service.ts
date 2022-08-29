@@ -4,8 +4,7 @@ import { createUserDto } from 'src/users/dto/createUser.dto';
 import { User } from 'src/typeorm';
 import { DataSource, Repository } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
-import { number } from 'joi';
-import { CANCELLED } from 'dns';
+import { UserStatus } from './types/UserStatus';
 
 @Injectable()
 export class UsersService {
@@ -128,6 +127,10 @@ export class UsersService {
             loser.id,
             loser
         );
+    }
+
+    async getUserStatus(id: number): Promise<UserStatus> {
+        return await (await this.findOneById(id)).status;
     }
 
 }

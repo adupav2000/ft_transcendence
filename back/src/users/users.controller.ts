@@ -3,6 +3,7 @@ import { AuthenticatedGuard } from 'src/auth/guards/auth.guard';
 import { AuthFilter } from 'src/auth/utils/auth.filter';
 import { User } from 'src/typeorm';
 import { createUserDto } from './dto/createUser.dto';
+import { UserStatus } from './types/UserStatus';
 import { UsersService } from './users.service';
 
 //@UseGuards(AuthenticatedGuard)
@@ -41,6 +42,11 @@ export class UsersController {
     @Get(':username')
     findOneByUsername(@Param('username') username: string): Promise<User> {
         return this.usersService.findOneByUsername(username);
+    }
+
+    @Get('status/:id')
+    getUserStatus(@Param('id') userId: number): Promise<UserStatus> {
+        return this.usersService.getUserStatus(userId);
     }
 
     @Delete(':username')

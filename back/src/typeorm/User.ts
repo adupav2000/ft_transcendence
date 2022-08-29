@@ -35,4 +35,10 @@ export class User {
         default: []
     })
     blockedUsers: number[];
+
+    @Column({
+        default: 0,
+        nullable: false
+    })
+    status: number;
 }
