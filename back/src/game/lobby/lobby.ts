@@ -18,7 +18,7 @@ export class Lobby
 
     constructor    ( private server: Server ) {}
 
-    public addClient(client: AuthenticatedSocket): void
+    public addClient(client: AuthenticatedSocket, player:Player): void
     {
         if (this.nbPlayers < 2)
         {
@@ -43,7 +43,7 @@ export class Lobby
         this.clients.set(client.id, client.socket);
         client.join(this.id);
         client.data.lobby = this;
-
+        
         if (this.nbPlayers < 2)
         {
             let newPlayer: Player = {

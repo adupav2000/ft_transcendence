@@ -3,7 +3,7 @@ import { Cron, Interval } from "@nestjs/schedule";
 import { WebSocketServer } from "@nestjs/websockets";
 import { Server } from "socket.io";
 import { GameInstance } from "../game.instance";
-import { AuthenticatedSocket, GameState } from "../game.type";
+import { AuthenticatedSocket, GameState, Player } from "../game.type";
 import { Lobby } from "./lobby";
 
 export class LobbyManager
@@ -35,7 +35,7 @@ export class LobbyManager
         return lobby;
     }
 
-    public joinQueue(client: AuthenticatedSocket)
+    public joinQueue(client: AuthenticatedSocket, player:Player)
     {
         let lobby: Lobby;
 
@@ -47,7 +47,7 @@ export class LobbyManager
             this.avalaibleLobbies.push(lobby);
         }
 
-        lobby.addClient(client);
+        lobby.addClient(client, player);
     }
 
     public joinLobby(lobbyId: string, client: AuthenticatedSocket)
