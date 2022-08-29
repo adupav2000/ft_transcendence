@@ -92,12 +92,12 @@ export class GameInstance
     {
         if (this.state == GameState.Started)
         {
+            this.lobby.sendUpdate("collisionUpdate", this.gameData);
             //console.log(this.gameData.players);
             if (this.gameData.players.length > 1)
                 this.refreshBall()
             this.lobby.sendUpdate("stateUpdate", this.gameData);
-            this.lobby.sendUpdate("collisionUpdate", this.gameData);
-
+           
         }
 		if (this.gameData?.players?.length > 0)
 			setTimeout(() => this.emitUpdateLoop(), 30);

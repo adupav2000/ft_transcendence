@@ -36,8 +36,9 @@ export class Lobby
             this.nbPlayers++;
             
             if (this.nbPlayers == 1)
-            client.emit("watingForOpponent");
-            this.sendToUsers("gameReady", "Game is ready");
+                client.emit("watingForOpponent");
+            else
+                this.sendToUsers("gameReady", "Game is ready");
         }
         /*
         this.clients.set(client.id, client.socket);
