@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, UseFilters, UseGuards, UsePipes, ValidationPipe } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, ParseIntPipe, Post, Put, UseFilters, UseGuards, UsePipes, ValidationPipe } from '@nestjs/common';
 import { AuthenticatedGuard } from 'src/auth/guards/auth.guard';
 import { AuthFilter } from 'src/auth/utils/auth.filter';
 import { User } from 'src/typeorm';
@@ -14,6 +14,23 @@ export class UsersController {
     @Post('create')
     createUser(@Body() userDto: createUserDto): Promise<User> {
         return this.usersService.createUser(userDto);
+    }
+
+    @Put('block/:id')
+    blockUser(@Param('id') idToBlock: number)
+    {
+        return this.usersService.blockUser(idToBlock)
+    }
+    
+    @Put('unblock/:id')
+    unblockUser(@Param('id') idToBlock: number)
+    {
+        return this.usersService.unblockUser(idToBlock)
+    }
+
+    @Get('isblocked/:id')
+    isBlocked(@Param('id') userId: number) {
+        return this.usersService.isBlocked(userId);
     }
 
     @Get()

@@ -2,7 +2,6 @@ import { IsAlpha, IsNotEmpty, IsNumber, IsNumberString, IsString } from "class-v
 
 export class createUserDto {
     @IsNotEmpty()
-    @IsNumber()
     intraId: number;
     
     @IsNotEmpty()
