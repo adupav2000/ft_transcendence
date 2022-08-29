@@ -14,9 +14,9 @@ export function getContactZone()
     return document.getElementById("ball")!.getBoundingClientRect()
 }
 
-export function getPaddleContactZone()
+export function getPaddleContactZone(id:string)
 {
-    return document.getElementById("playerPaddle")!.getBoundingClientRect()
+    return document.getElementById(id)!.getBoundingClientRect()
 }
 
 export function getComputerContactZone()

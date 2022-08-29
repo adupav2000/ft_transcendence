@@ -16,19 +16,14 @@ export class Lobby
     
     constructor    ( private server: Server ) {}
 
-    public addClient(client: AuthenticatedSocket): void
+    public addClient(client: AuthenticatedSocket, player:Player): void
     {
-        let newPlayer: Player = {
-            id: client.id,
-            pos: 50,
-            score: 0
-        }
-        this.players.set(client.id, newPlayer);
+        this.players.set(client.id, player);
         
         client.join(this.id);
         client.data.lobby = this;
         
-        this.gameInstance.addPlayer(newPlayer);
+        this.gameInstance.addPlayer(player);
         this.nbPlayers++;
 
         if (this.nbPlayers == 1)

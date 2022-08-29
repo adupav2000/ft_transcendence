@@ -3,7 +3,7 @@ import { OnGatewayConnection, OnGatewayDisconnect, OnGatewayInit, SubscribeMessa
 import { Socket, Server } from 'socket.io';
 import { string } from 'yargs';
 import { LobbyManager } from './lobby/lobby.manager';
-import { AuthenticatedSocket, Ball, Player } from './game.type';
+import { AuthenticatedSocket, Ball, gameCollionInfoT, Player } from './game.type';
 import { GameInstance } from './game.instance';
 
 
@@ -37,19 +37,19 @@ export class GameGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
 	}
 
 	@SubscribeMessage('createLobby')
-	createLobby(client: AuthenticatedSocket)
+	createLobby(client: AuthenticatedSocket, player:Player)
 	{
 		let lobby = this.lobbyManager.createLobby();
-		lobby.addClient(client);
+		lobby.addClient(client, player);
 
 		client.emit("lobbyCreated", "Successful creation");
 	}
 
 	@SubscribeMessage('joinedQueue')
-	joiningQueue(client: AuthenticatedSocket)
+	joiningQueue(client: AuthenticatedSocket, player:Player)
 	{
 		console.log(`Client ${client.id} joined queue`)
-		this.lobbyManager.joinQueue(client);
+		this.lobbyManager.joinQueue(client, player);
 	}
 
 	@SubscribeMessage('startGame')
@@ -70,6 +70,10 @@ export class GameGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
 	handlePlayerPosition(client: AuthenticatedSocket, data: { id: string, position: number}) {
 		client.data.lobby?.gameInstance.playerMoved(client, data);
 
+	}
+	@SubscribeMessage('gameCollisionChange')
+	handleGameCollision(client: AuthenticatedSocket, data: gameCollionInfoT) {
+		client.data.lobby?.gameInstance.changeCollisionInfo(client, data);
 	}
 
 }

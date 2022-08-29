@@ -11,15 +11,24 @@ export interface Player
 export interface Ball {
 	x: number,
 	y: number,
-    dirX: number,
-    dirY: number,
-    speed: number,
+  dirX: number,
+  dirY: number,
+  speed: number,
 	delta: number
+}
+
+export interface gameCollionInfoT {
+  player1PaddleZone:DOMRect,
+  player2PaddleZone:DOMRect,
+  ballZone:DOMRect,
+  borderZone:DOMRect
+  gameArea:number
 }
 
 export interface GameData{
   players: Player[],
   ball: Ball,
+  gameCollisionInfo:gameCollionInfoT
 }
 
 

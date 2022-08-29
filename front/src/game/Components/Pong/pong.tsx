@@ -15,6 +15,7 @@ type gameStateT = {
     playerScore:number,
     computerScore:number
 }
+
 type gameDataT = {
 	time:string,
     scoreToWin:number,
@@ -39,86 +40,140 @@ type playerT = {
 	score:number,
 }
 
-type playersT = [{
-	id:string,
-    position:number,
-	score:number,
-}]
+type gameCollionInfoT = {
+	player1PaddleZone:DOMRect,
+	player2PaddleZone:DOMRect,
+	ballZone:DOMRect,
+	borderZone:DOMRect
+	gameArea:number
+  }
+
+type playersT = [playerT]
 
 type updateInfoT = {
 	players: playersT,
-	ball: ballInfoT
+	ball: ballInfoT,
+	gameCollionInfo:gameCollionInfoT
 }
+
+let socket:Socket
 
 export default function Pong()
 {
-    const [position, setPosition] = React.useState(50)
-    const [computerPosition, setComputerPosition] = React.useState(50)
 	const [players, setPlayers] = React.useState<playersT>()
+	const [ball, setBall] = React.useState<ballInfoT>()
+	const [gameCollisionInfo, setGameCollisonInfo] = React.useState<gameCollionInfoT>({
+		player1PaddleZone: new DOMRect(),
+		player2PaddleZone:  new DOMRect(),
+		ballZone:  new DOMRect(),
+		borderZone:  new DOMRect(),
+		gameArea: 0
+	})
 	const [gameState, setGameState] = React.useState<gameStateT>({
         isPlaying: false,
         scoreToWin: 3,
         playerScore: 0,
         computerScore: 0
     })
-	const [socket, setSocket] = useState<Socket>()
+	//const [socket, setSocket] = useState<Socket>()
 
   	const sendPosition = (player:playerT) => {
-    socket?.emit("playerPosChanged", player);
-  }
+		socket?.emit("playerPosChanged", player);
+	}
 
-  const joinQueue = () => {
-	socket?.emit("joinedQueue");
-	socket?.emit("startGame");
+	const sendCollisionInfo = (collisionInfo:gameCollionInfoT) => {
+		console.log(socket)
+		socket?.emit("gameCollisionChange", collisionInfo);
+	}
 
-  }
+	const joinQueue = () => {
+		socket?.emit("joinedQueue", {
+			id: socket!.id,
+			position: 50,
+			score: 0,
+		});
+		socket?.emit("startGame");
 
-  function handleUpdate(updateInfo:updateInfoT)
-  {
-	  setPlayers(updateInfo.players)
-	  //setBall(updateInfo.ball)
-  }
+	}
+
+	function setStates(updateInfo:updateInfoT)
+	{
+		setPlayers(updateInfo.players)
+		setBall(updateInfo.ball)
+		if (updateInfo.players !== undefined && updateInfo.players?.length > 1)
+		{
+			const collisionInfo:gameCollionInfoT = {
+				player1PaddleZone: utils.getPaddleContactZone("player1"),
+				player2PaddleZone: utils.getPaddleContactZone("player1"),
+				ballZone: utils.getContactZone(),
+				borderZone: utils.getContactZone(),
+				gameArea: window.innerHeight
+			}
+			setGameCollisonInfo(collisionInfo)
+		}
+	}
+
+	function handleUpdate(updateInfo:updateInfoT)
+	{
+		setStates(updateInfo)
+	}
 
 	const handleStart = () => {
 		console.log("Gameready")
 		setGameState((oldState) => ({
 			...oldState,
-		 	isPlaying: true
+			isPlaying: true
 			})
 		)
-
 	}
 
+		
 	useEffect(() => {
 		const newSocket = io("http://localhost:8002");
-		setSocket(newSocket);
+		socket = newSocket;
 		newSocket.on("connect", () => {
-			
+			console.log(socket)
+
 			newSocket.on('gameReady', handleStart)
 			newSocket.on('stateUpdate',(updateInfo:updateInfoT) => handleUpdate(updateInfo))
+			newSocket.on('collisionUpdate', () => sendCollisionInfo({
+				player1PaddleZone: utils.getPaddleContactZone("player1"),
+				player2PaddleZone: utils.getPaddleContactZone("player1"),
+				ballZone: utils.getContactZone(),
+				borderZone: utils.getContactZone(),
+				gameArea: window.innerHeight
+			}))
 		})
-	}, [])
+		return () => {
+			newSocket.off('connect');
+			newSocket.off('gameReady');
+			newSocket.off('stateUpdate');
+			newSocket.off('collisionUpdate');
+		  };
+		}, []);
 
-    function handleMouseMove(event:React.MouseEvent<HTMLDivElement>)
-    {
+	function handleMouseMove(event:React.MouseEvent<HTMLDivElement>)
+	{
 		//HANDLE THE MOUSE MOVE EVENT ON THE GAME AREA
 		if (gameState.isPlaying)
 		{
-        	const value:number = (event.clientY / window.innerHeight) * 100
-        	setPosition(value)
-			sendPosition({id: socket!.id, position: value, score: 0})
+			const value:number = (event.clientY / window.innerHeight) * 100
+			sendPosition({
+				id: socket!.id,
+				position: value,
+				score: 0,
+			})
+			// if (players !== undefined && players?.length > 1)
+			// {
+			// 	sendCollisionInfo({
+			// 		player1PaddleZone: utils.getPaddleContactZone("player1"),
+			// 		player2PaddleZone: utils.getPaddleContactZone("player2"),
+			// 		ballZone: utils.getContactZone(),
+			// 		borderZone: utils.getContactZone(),
+			// 		gameArea: window.innerHeight
+			// 	})
+			// }
 		}
-    }
-
-	function restartGame()
-	{
-		//RESET GAME VARIABLE TO STARTING VALUES
-		setGameState((oldGameState) => ({
-			...oldGameState,
-			isPlaying: false,
-		}))
-		setComputerPosition(50)
-		setPosition(50)
 	}
 
 	//FONCTION NON APPELLER A TESTER AVEC LE BACKEND
@@ -138,13 +193,13 @@ export default function Pong()
 		//EXEMPLE D'ENVOIE EN COMMENTAIRE A TESTER
 	// 	const url:string = "http://localhost:3000/game"
 	// 	await fetch(url, {
-    //     method: 'POST',
-    //     body: JSON.stringify(gameData)
-    //   }).then(function(response) {
-    //     console.log(response)
-    //     return response.json();
-    //   });
- 
+	//     method: 'POST',
+	//     body: JSON.stringify(gameData)
+	//   }).then(function(response) {
+	//     console.log(response)
+	//     return response.json();
+	//   });
+
 	}
 
 	function setRoundWin()
@@ -175,35 +230,30 @@ export default function Pong()
 			return true
 		return false
 	}
-
-    async function updateGame(time:number)
-    {
-		//GAMELOOP
-		//IA LOGIC JUST FOLOWING THE Y COORD OF THE BALL
-        const newPosition =  parseFloat(window.getComputedStyle(document.getElementById("ball")!).getPropertyValue('--y'));
-        setComputerPosition(newPosition)
-		setRoundWin()
-		if (isWin())
-			restartGame()
-			
-    }
-
-	//useAnimationFrame(updateGame)
 	const playersElements:any = players?.map((elem, index) =>
-		<Paddle key={index} className={index == 0 ? "left" : "right"} position={elem.pos} player={index == 0 ? true :false}/>
+		<Paddle id={index == 0 ? "player1" : "player2"} key={index} className={index == 0 ? "left" : "right"} position={elem.pos} player={index == 0 ? true :false}/>
 		)
-    return (
-        <div className="pong" onMouseMove={handleMouseMove}>
-            {
+	return (
+		<div className="pong" onMouseMove={handleMouseMove}>
+			{
 				!gameState.isPlaying && 
-                	<button className="buttonStart" onClick={joinQueue}>
+					<button className="buttonStart" onClick={joinQueue}>
 						Start Game
 					</button>
 			}
-            <Score playerScore={gameState.playerScore} computerScore={gameState.computerScore}/>
+			<Score playerScore={gameState.playerScore} computerScore={gameState.computerScore}/>
 			{playersElements}
-        </div>
-    )
+			{
+				players === undefined && 
+				<Paddle id="player1" className="left" position={50} player={true}/>
+			}
+			{
+				(players?.length === 1 || players === undefined) && 
+				<Paddle id="player1" className="right" position={50} player={false}/>
+			}
+			<Ball isPlaying={gameState.isPlaying} x={ball?.x} y={ball?.y}/>
+		</div>
+	)
 }
 
-//            <Ball isPlaying={gameState.isPlaying}/>
+	//            <Ball isPlaying={gameState.isPlaying}/>
