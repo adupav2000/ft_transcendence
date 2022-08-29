@@ -69,9 +69,9 @@ export class GameGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
 
 
 	@SubscribeMessage('startGame')
-	launchGame(client: AuthenticatedSocket)
+	launchGame(client: AuthenticatedSocket, data: any)
 	{
-		client.data.lobby.startGame();
+		client.data.lobby.startGame(data);
 	}
 
 	@SubscribeMessage('ballPosChanged')

@@ -36,10 +36,11 @@ export type gameCollionInfoT = {
 	player2PaddleZone:DOMRect,
 	ballZone:DOMRect,
 	borderZone:DOMRect
-	gameArea:number
+	innerHeight:number
+	innerWidth:number
   }
 
-export type playersT = [playerT]
+export type playersT = playerT[]
 
 export type updateInfoT = {
 	players: playersT,
