@@ -7,9 +7,9 @@ export class GameInstance
     private stateChanged = false;
 	private isEmittingUpdates = false;
     
-    private gameData:   GameData;
+    private gameData:       GameData;
 
-    private state:       GameState;
+    private state:          GameState;
 
     constructor(public lobby: Lobby) {
         var directionX = 0;
@@ -140,5 +140,25 @@ export class GameInstance
     {
         this.stateChanged = true;
         this.gameData.ball = ball;
+    }
+
+    public isPlayer(clientId: string): boolean
+    {  
+        for (let i = 0; i < this.gameData.players.length; i++)
+        {
+            if (this.gameData.players[i].id == clientId)
+                return true;
+        }
+        return false;
+    }
+
+    public playersId(): string[]
+    {
+        let res: string[] = [];
+        this.gameData.players.forEach((player) => {
+            res.push(player.id);
+        })
+        return res;
+
     }
 }
