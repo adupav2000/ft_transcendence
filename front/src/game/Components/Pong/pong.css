@@ -67,7 +67,7 @@
     left: 50%;
     height: 5vh;
     width: 20vh;
-    background-color: aqua;
+    background-color: #00ffff;
     border-radius: 20px;
     transform: translate(-50%, -50%);
     cursor: pointer;
@@ -75,4 +75,16 @@
 
 .buttonStart:active {
     box-shadow: inset 5px 5px 10px -3px rgba(0, 0, 0, 0.7);
+}
+
+.waiting {
+    display: flex;
+    flex-direction: column;
+    position: absolute;
+    align-items: center;
+    top: 30vh;
+    left: 50%;
+    height: 5vh;
+    width: 20vh;
+    transform: translate(-50%, -50%);
 }

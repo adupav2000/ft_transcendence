@@ -3,58 +3,10 @@ import Ball from "../../Elements/ball"
 import Paddle from "../../Elements/paddle"
 import Score from "../../Elements/score"
 import * as utils from "../../GameUtils/GameUtils"
-import "../../hooks/useAnimationFrame"
-import useAnimationFrame from "../../hooks/useAnimationFrame"
 import "./pong.css"
 import { io, Socket } from 'socket.io-client'
-
-
-type gameStateT = {
-    isPlaying:boolean,
-    scoreToWin:number,
-    playerScore:number,
-    computerScore:number
-}
-
-type gameDataT = {
-	time:string,
-    scoreToWin:number,
-    player1id:number,
-    player2id:number,
-	player1score:number,
-	player2score:number
-}
-
-type ballInfoT = {
-    x: number,
-    y: number,
-    dirX: number,
-    dirY: number,
-    speed: number,
-	delta: number
-}
-
-type playerT = {
-	id:string,
-    position:number,
-	score:number,
-}
-
-type gameCollionInfoT = {
-	player1PaddleZone:DOMRect,
-	player2PaddleZone:DOMRect,
-	ballZone:DOMRect,
-	borderZone:DOMRect
-	gameArea:number
-  }
-
-type playersT = [playerT]
-
-type updateInfoT = {
-	players: playersT,
-	ball: ballInfoT,
-	gameCollionInfo:gameCollionInfoT
-}
+import { playerT, playersT, ballInfoT, gameCollionInfoT, gameStateT, updateInfoT, gameDataT} from "../../type"
+import {ThreeDots} from "react-loader-spinner";
 
 let socket:Socket
 
@@ -70,6 +22,7 @@ export default function Pong()
 		gameArea: 0
 	})
 	const [gameState, setGameState] = React.useState<gameStateT>({
+        watingForOpponent: false,
         isPlaying: false,
         scoreToWin: 3,
         playerScore: 0,
@@ -93,8 +46,15 @@ export default function Pong()
 			position: 50,
 			score: 0,
 		});
-		socket?.emit("startGame");
+	}
 
+	const handleWait = () => {
+		setGameState((oldState) => ({
+			...oldState,
+			watingForOpponent: true,
+			})
+		)
+		console.log("waitttt")
 	}
 
 	function setStates(updateInfo:updateInfoT)
@@ -120,12 +80,14 @@ export default function Pong()
 	}
 
 	const handleStart = () => {
-		console.log("Gameready")
+		console.log(socket)
 		setGameState((oldState) => ({
 			...oldState,
+			watingForOpponent: false,
 			isPlaying: true
 			})
 		)
+		socket?.emit("startGame");
 	}
 
 		
@@ -135,8 +97,8 @@ export default function Pong()
 		newSocket.on("connect", () => {
 			console.log(socket)
 
+			newSocket.on('watingForOpponent', handleWait)
 			newSocket.on('gameReady', handleStart)
-			newSocket.on('stateUpdate',(updateInfo:updateInfoT) => handleUpdate(updateInfo))
 			newSocket.on('collisionUpdate', () => sendCollisionInfo({
 				player1PaddleZone: utils.getPaddleContactZone("player1"),
 				player2PaddleZone: utils.getPaddleContactZone("player2"),
@@ -144,6 +106,8 @@ export default function Pong()
 				borderZone: utils.getContactZone(),
 				gameArea: window.innerHeight
 			}))
+			newSocket.on('stateUpdate',(updateInfo:updateInfoT) => handleUpdate(updateInfo))
+			
 		})
 		return () => {
 			newSocket.off('connect');
@@ -177,70 +141,36 @@ export default function Pong()
 		}
 	}
 
-	//FONCTION NON APPELLER A TESTER AVEC LE BACKEND
-	async function sendData ()
-	{
-		//INFO SUR LA PARTIE A ENVOYER A LA BASE DE DONNÉE
-		//DES INFO PEUVENT MANQUÉ
-		const gameData:gameDataT = {
-			time: Date(),
-			scoreToWin: gameState.scoreToWin,
-			player1id: 1, //ON RECUPERERA LES VRAIS ID DES JOUEUR
-			player2id: 2,
-			player1score: gameState.playerScore,
-			player2score:gameState.computerScore
-		}
-		console.log(JSON.stringify(gameData))
-		//EXEMPLE D'ENVOIE EN COMMENTAIRE A TESTER
-	// 	const url:string = "http://localhost:3000/game"
-	// 	await fetch(url, {
-	//     method: 'POST',
-	//     body: JSON.stringify(gameData)
-	//   }).then(function(response) {
-	//     console.log(response)
-	//     return response.json();
-	//   });
-
-	}
-
-	function setRoundWin()
-	{
-		//CHECK WHO WIN AND CHANGE STATE VALUE OF SCORE
-		const contactZone:DOMRect = utils.getContactZone()
-		if (contactZone.right >= window.innerWidth)
-		{
-			setGameState((oldGameState) => ({
-				...oldGameState,
-				playerScore: oldGameState.playerScore + 1
-			}))
-		}
-		else if (contactZone.left <= 0) 
-		{
-			setGameState((oldGameState) => ({
-				...oldGameState,
-				computerScore: oldGameState.computerScore + 1
-			}))
-		}
-	}
-
-	function isWin()
-	{
-		//CHECK IF SOMEONE WINS
-		if (gameState.playerScore === gameState.scoreToWin
-			|| gameState.computerScore === gameState.scoreToWin)
-			return true
-		return false
-	}
 	const playersElements:any = players?.map((elem, index) =>
 		<Paddle id={index == 0 ? "player1" : "player2"} key={index} className={index == 0 ? "left" : "right"} position={elem.pos} player={index == 0 ? true :false}/>
 		)
+
 	return (
 		<div className="pong" onMouseMove={handleMouseMove}>
 			{
-				!gameState.isPlaying && 
+				!gameState.isPlaying && !gameState.watingForOpponent && 
 					<button className="buttonStart" onClick={joinQueue}>
 						Start Game
 					</button>
+			}
+			{
+				gameState.watingForOpponent &&
+					<div className="waiting">
+						<h1 style={{
+							color: "white"
+						}}>Waiting for Player</h1>
+						<ThreeDots 
+							height="80" 
+							width="80" 
+							radius="9"
+							color="#00ffff" 
+							ariaLabel="three-dots-loading"
+							wrapperStyle={{}}
+							wrapperClassName=""
+							visible={true}
+						/>
+					</div>
+						
 			}
 			<Score playerScore={gameState.playerScore} computerScore={gameState.computerScore}/>
 			{playersElements}
@@ -256,5 +186,3 @@ export default function Pong()
 		</div>
 	)
 }
-
-	//            <Ball isPlaying={gameState.isPlaying}/>
