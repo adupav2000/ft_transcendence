@@ -35,7 +35,8 @@ export class GameInstance
                 player2PaddleZone: null,
                 ballZone: null,
                 borderZone: null,
-                gameArea: 0
+                innerHeight: 0,
+                innerWidth: 0
             }
         }
     }
@@ -57,7 +58,7 @@ export class GameInstance
 	checkYcollision(){
 		//CHECK IF THE BALL HITS THE TOP OR THE BOTTOM
 		const contactZone:DOMRect = this.gameData.gameCollisionInfo.ballZone
-		if (contactZone.bottom > this.gameData.gameCollisionInfo.gameArea
+		if (contactZone.bottom > this.gameData.gameCollisionInfo.innerHeight
 			|| contactZone.top < 0) {
 				return true
 		}

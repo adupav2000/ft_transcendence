@@ -22,7 +22,8 @@ export interface gameCollionInfoT {
   player2PaddleZone:DOMRect,
   ballZone:DOMRect,
   borderZone:DOMRect
-  gameArea:number
+  innerHeight:number,
+  innerWidth:number
 }
 
 export interface GameData{
