@@ -78,6 +78,7 @@ export default function Pong()
 	//const [socket, setSocket] = useState<Socket>()
 
   	const sendPosition = (player:playerT) => {
+
 		socket?.emit("playerPosChanged", player);
 	}
 
@@ -104,7 +105,7 @@ export default function Pong()
 		{
 			const collisionInfo:gameCollionInfoT = {
 				player1PaddleZone: utils.getPaddleContactZone("player1"),
-				player2PaddleZone: utils.getPaddleContactZone("player1"),
+				player2PaddleZone: utils.getPaddleContactZone("player2"),
 				ballZone: utils.getContactZone(),
 				borderZone: utils.getContactZone(),
 				gameArea: window.innerHeight
@@ -129,7 +130,7 @@ export default function Pong()
 
 		
 	useEffect(() => {
-		const newSocket = io("http://localhost:8002");
+		const newSocket = io("http://10.11.10.3:8002");
 		socket = newSocket;
 		newSocket.on("connect", () => {
 			console.log(socket)
@@ -138,7 +139,7 @@ export default function Pong()
 			newSocket.on('stateUpdate',(updateInfo:updateInfoT) => handleUpdate(updateInfo))
 			newSocket.on('collisionUpdate', () => sendCollisionInfo({
 				player1PaddleZone: utils.getPaddleContactZone("player1"),
-				player2PaddleZone: utils.getPaddleContactZone("player1"),
+				player2PaddleZone: utils.getPaddleContactZone("player2"),
 				ballZone: utils.getContactZone(),
 				borderZone: utils.getContactZone(),
 				gameArea: window.innerHeight
@@ -249,7 +250,7 @@ export default function Pong()
 			}
 			{
 				(players?.length === 1 || players === undefined) && 
-				<Paddle id="player1" className="right" position={50} player={false}/>
+				<Paddle id="player2" className="right" position={50} player={false}/>
 			}
 			<Ball isPlaying={gameState.isPlaying} x={ball?.x} y={ball?.y}/>
 		</div>

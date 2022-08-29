@@ -27,7 +27,7 @@ export class GameInstance
                 y: 50,
                 dirX: directionX,
                 dirY: directionY,
-                speed: 0.0025,
+                speed: 0.025,
                 delta: 0,
             },
             gameCollisionInfo: {
@@ -83,7 +83,7 @@ export class GameInstance
         this.gameData.ball.dirY = this.checkYcollision() ? this.gameData.ball.dirY * (-1) : this.gameData.ball.dirY
         this.gameData.ball.x = this.gameData.ball.x + (this.gameData.ball.dirX * this.gameData.ball.speed * 30)
 		this.gameData.ball.y = this.gameData.ball.y + (this.gameData.ball.dirY * this.gameData.ball.speed * 30)
-		this.gameData.ball.speed = this.gameData.ball.speed + 0.0001
+		this.gameData.ball.speed = this.checkPaddleCollision() ? this.gameData.ball.speed + 0.001 : this.gameData.ball.speed
 	}
 
     //@Interval(30)
