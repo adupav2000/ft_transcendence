@@ -26,14 +26,15 @@ export default function Pong()
 	const [gameState, setGameState] = React.useState<gameStateT>({
         watingForOpponent: false,
         isPlaying: false,
+		isGameFinish: false,
         scoreToWin: 3,
         playerScore: 0,
-        computerScore: 0
+        computerScore: 0,
+		winnerId: ""
     })
 	//const [socket, setSocket] = useState<Socket>()
 
   	const sendPosition = (player:playerT) => {
-
 		socket?.emit("playerPosChanged", player);
 	}
 
@@ -48,6 +49,15 @@ export default function Pong()
 			position: 50,
 			score: 0,
 		});
+		setGameState({
+			watingForOpponent: false,
+			isPlaying: false,
+			isGameFinish: false,
+			scoreToWin: 3,
+			playerScore: 0,
+			computerScore: 0,
+			winnerId: ""
+		})
 	}
 
 	const handleWait = () => {
@@ -117,6 +127,16 @@ export default function Pong()
 		}
 	}
 		
+	function handleGameResult(winnerId:string)
+	{
+		setGameState((oldGameState) => ({
+			...oldGameState,
+			isPlaying: false,
+			isGameFinish: true,
+			winnerId: winnerId
+		}))
+	}
+
 	useEffect(() => {
 		const newSocket = io("http://localhost:8002");
 		socket = newSocket;
@@ -134,11 +154,13 @@ export default function Pong()
 				innerWidth: window.innerWidth
 			}))
 			newSocket.on('stateUpdate',(updateInfo:updateInfoT) => handleUpdate(updateInfo))
-			newSocket.on('goalScored', (idScorer:string) => handleGoal(idScorer))
+			newSocket.on('Result',(winnerId:string) => handleGameResult(winnerId))
+			//newSocket.on('goalScored', (idScorer:string) => handleGoal(idScorer))
 			
 		})
 		return () => {
 			newSocket.off('connect');
+			newSocket.off('watingForOpponent');
 			newSocket.off('gameReady');
 			newSocket.off('stateUpdate');
 			newSocket.off('collisionUpdate');
@@ -150,17 +172,21 @@ export default function Pong()
 	const playersElements:any = players?.map((elem, index) =>
 		<Paddle id={index == 0 ? "player1" : "player2"} key={index} className={index == 0 ? "left" : "right"} position={elem.pos} player={index == 0 ? true :false}/>
 		)
+		console.log(gameState.isGameFinish)
+		console.log(socket?.id)
+		console.log(gameState.winnerId)
+
 	return (
 		<div className="pong" onMouseMove={handleMouseMove}>
 			{
-				!gameState.isPlaying && !gameState.watingForOpponent && 
-					<button className="buttonStart" onClick={joinQueue}>
+				!gameState.isPlaying && !gameState.watingForOpponent && !gameState.isGameFinish
+					&& <button className="buttonStart" onClick={joinQueue}>
 						Start Game
 					</button>
 			}
 			{
 				gameState.watingForOpponent &&
-					<div className="waiting">
+					<div className="game-display">
 						<h1 style={{
 							color: "white"
 						}}>Waiting for Player</h1>
@@ -176,6 +202,16 @@ export default function Pong()
 						/>
 					</div>
 						
+			}
+			{
+					gameState.isGameFinish && 
+					<div className="game-display">
+						{(socket?.id === gameState.winnerId) ? "YOU WIN" : "YOU LOSE"}
+						<button className="buttonStart" onClick={joinQueue}>
+							Restart Game
+						</button>
+						</div>
+					
 			}
 			{
 				gameState.isPlaying &&
