@@ -117,7 +117,12 @@ export class Lobby
 
     public playersId(): string[] { return this.gameInstance.playersId(); }
 
-    public sendUpdate(event: string, data: GameData) { this.server.to(this.id).emit(event, data); }
+    public sendUpdate(event: string, data: any) { this.server.to(this.id).emit(event, data); }
+
+    public needUpdate(event: string, data: GameData) { 
+		const [firstClient] = this.clients.keys()
+		this.server.to(firstClient).emit(event, data); 
+    }
 
     public sendToUsers(event: string, data: any) { this.server.to(this.id).emit(event, data); }
 
