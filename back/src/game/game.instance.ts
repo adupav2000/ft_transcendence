@@ -69,7 +69,7 @@ export class GameInstance
 
     checkXCollision(): boolean
     {
-        if (this.gameData.gameCollisionInfo.ballZone.left <= 0 ||
+        if (this.gameData.gameCollisionInfo.ballZone.left < 0 ||
             this.gameData.gameCollisionInfo.ballZone.right >= this.gameData.gameCollisionInfo.innerWidth)
             return true;
         return false;
@@ -119,7 +119,7 @@ export class GameInstance
         {
             // if(this.gameData.gameCollisionInfo.innerWidth === 0)
             //     this.lobby.needUpdate("collisionUpdate", this.gameData);
-            if (this.checkXCollision())
+            if (this.checkXCollision() == true)
             {
                 this.handleGoal()
             }
@@ -170,6 +170,7 @@ export class GameInstance
 
     public start(data: gameCollionInfoT)
     {
+		console.log(data);
         this.state = GameState.Started;
         this.gameData.gameCollisionInfo = data;
         this.restartRound();

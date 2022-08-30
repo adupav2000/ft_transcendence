@@ -109,6 +109,8 @@ export default function Pong()
 			isPlaying: true
 			})
 		)
+		gameCollisionInfo.innerHeight = window.innerHeight;
+		gameCollisionInfo.innerWidth = window.innerWidth;
 		if (socket.id === id)
 			socket?.emit("startGame", gameCollisionInfo);
 	}

@@ -88,6 +88,7 @@ export class LobbyManager
         }
         console.log(`Avalaible lobbies: ${this.avalaibleLobbies.length}`);
         this.lobbies.forEach((lobby, id) => {
+			console.log(lobby.nbPlayers);
             if (lobby.state == GameState.Stopped && lobby.nbPlayers == 0)
             {
                 this.lobbies.delete(id);
