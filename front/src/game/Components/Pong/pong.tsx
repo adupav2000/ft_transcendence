@@ -28,6 +28,7 @@ export default function Pong()
         watingForOpponent: false,
         isPlaying: false,
 		isGameFinish: false,
+		invalidLobbyId: false,
         scoreToWin: 3,
         playerScore: 0,
         computerScore: 0,
@@ -54,6 +55,7 @@ export default function Pong()
 			watingForOpponent: false,
 			isPlaying: false,
 			isGameFinish: false,
+			invalidLobbyId: false,
 			scoreToWin: 3,
 			playerScore: 0,
 			computerScore: 0,
@@ -140,6 +142,16 @@ export default function Pong()
 		}))
 	}
 
+	function handleError(errorMessage:string)
+	{
+		console.log("laaaa")
+		setGameState((oldGameState) => ({
+			...oldGameState,
+			isPlaying: false,
+			invalidLobbyId: true
+		}))
+	}
+
 	useEffect(() => {
 		const newSocket = io("http://localhost:8002");
 		socket = newSocket;
@@ -158,6 +170,7 @@ export default function Pong()
 			}))
 			newSocket.on('stateUpdate',(updateInfo:updateInfoT) => handleUpdate(updateInfo))
 			newSocket.on('Result',(winnerId:string) => handleGameResult(winnerId))
+			newSocket.on('lobbyNotFound',(errorMessage:string) => handleError(errorMessage))
 			//newSocket.on('goalScored', (idScorer:string) => handleGoal(idScorer))
 			
 		})
@@ -185,7 +198,8 @@ export default function Pong()
 		setGameState((oldState) => ({
 			...oldState,
 			watingForOpponent: false,
-			isPlaying: true
+			isPlaying: true,
+			invalidLobbyId: false
 			}))
 		socket?.emit("spectacteGame", id);
 	}
@@ -212,7 +226,10 @@ export default function Pong()
 							<input type="text" value={input} onChange={handleChange}/>
 							<input type="submit" value="Rechercher"/>
 						</form>
-					</div> 	
+						{gameState.invalidLobbyId && <p style={{
+							color: "red"
+						}}>This lobby does not exist anymore</p>}
+					</div> 
 			}
 			{
 				gameState.watingForOpponent &&

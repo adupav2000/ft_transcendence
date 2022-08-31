@@ -3,6 +3,7 @@ export type gameStateT = {
     watingForOpponent:boolean,
     isPlaying:boolean,
     isGameFinish:boolean,
+    invalidLobbyId: boolean,
     scoreToWin:number,
     playerScore:number,
     computerScore:number
