@@ -138,7 +138,6 @@ export class GameInstance
 
     sendResult(winnerIndex: number)
     {
-        console.log("fdfds")
         this.lobby.sendToUsers('Result', this.gameData.players[winnerIndex].id);
     }
 
@@ -172,7 +171,6 @@ export class GameInstance
 
     public start(data: gameCollionInfoT)
     {
-		console.log(data);
         this.state = GameState.Started;
         this.gameData.gameCollisionInfo = data;
         this.restartRound();

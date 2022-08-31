@@ -52,10 +52,13 @@ export class LobbyManager
 
     public joinLobby(lobbyId: string, client: AuthenticatedSocket)
     {
-        console.log('[id]',lobbyId)
-        console.log('lobby[id]', this.lobbies[lobbyId])
-        if (this.lobbies[lobbyId]?.addClient(client /*, 2eme argument ?*/) == undefined)
+        console.log(`Spectacte lobby ${lobbyId}`);
+        
+        const lobby: Lobby = this.lobbies.get(lobbyId);
+        if (lobby?.addClient(client, null) == undefined)
             throw new NotFoundException("This lobby does not exist anymore");
+        else
+            console.log('Spectacte success');
     }
     /*
     * Retourne l'id de tous les lobbies en game et l'id des 2 joueurs
