@@ -110,8 +110,7 @@ export class GameInstance
                 {
                     this.sendResult(winner);
                     this.state = GameState.Stopped;
-                }
-                
+                }               
             }
             else
             {
@@ -151,6 +150,8 @@ export class GameInstance
             speed: 0.025,
             delta: 0,
         }
+        this.gameData.players[0].pos = 50;
+        this.gameData.players[1].pos = 50;
         
     }
 
