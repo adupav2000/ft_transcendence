@@ -52,7 +52,9 @@ export class LobbyManager
 
     public joinLobby(lobbyId: string, client: AuthenticatedSocket)
     {
-        if (this.lobbies[lobbyId]?.addClient(client) == undefined)
+        console.log('[id]',lobbyId)
+        console.log('lobby[id]', this.lobbies[lobbyId])
+        if (this.lobbies[lobbyId]?.addClient(client /*, 2eme argument ?*/) == undefined)
             throw new NotFoundException("This lobby does not exist anymore");
     }
     /*

@@ -6,6 +6,7 @@ export type gameStateT = {
     scoreToWin:number,
     playerScore:number,
     computerScore:number
+    winnerId: string
 }
 
 export type gameDataT = {
@@ -30,7 +31,6 @@ export type playerT = {
 	id:string,
     position:number,
 	score:number,
-    isWin: boolean
 }
 
 export type gameCollionInfoT = {

@@ -15,6 +15,7 @@ export default function Pong()
 {
 	const [players, setPlayers] = React.useState<playersT>()
 	const [ball, setBall] = React.useState<ballInfoT>()
+	const [input, setInput] = React.useState<string>("")
 	const [gameCollisionInfo, setGameCollisonInfo] = React.useState<gameCollionInfoT>({
 		player1PaddleZone: new DOMRect(),
 		player2PaddleZone:  new DOMRect(),
@@ -178,13 +179,40 @@ export default function Pong()
 		console.log(socket?.id)
 		console.log(gameState.winnerId)
 
+	function spectateMode(id:string)
+	{
+		console.log(id)
+		setGameState((oldState) => ({
+			...oldState,
+			watingForOpponent: false,
+			isPlaying: true
+			}))
+		socket?.emit("spectacteGame", id);
+	}
+	
+	function handleChange(e:any) {
+		setInput(e.target.value);
+		}
+
+	function handleSubmit(e:any)
+	{
+		if (input !== undefined)
+			spectateMode(input)
+		e.preventDefault();
+	}
 	return (
 		<div className="pong" onMouseMove={handleMouseMove}>
 			{
 				!gameState.isPlaying && !gameState.watingForOpponent && !gameState.isGameFinish
-					&& <button className="buttonStart" onClick={joinQueue}>
-						Start Game
-					</button>
+					&& <div className="game-display">
+						<button className="buttonStart" onClick={joinQueue}>
+							Start Game
+						</button>
+						<form onSubmit={handleSubmit}>
+							<input type="text" value={input} onChange={handleChange}/>
+							<input type="submit" value="Rechercher"/>
+						</form>
+					</div> 	
 			}
 			{
 				gameState.watingForOpponent &&
@@ -199,7 +227,6 @@ export default function Pong()
 							color="#00ffff" 
 							ariaLabel="three-dots-loading"
 							wrapperStyle={{}}
-							wrapperClassName=""
 							visible={true}
 						/>
 					</div>

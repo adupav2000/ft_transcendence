@@ -44,6 +44,8 @@ export class Lobby
         this.clients.set(client.id, client);
         client.join(this.id);
         client.data.lobby = this;
+        console.log("heerrreee")
+        console.log(this.id)
         
         if (this.nbPlayers < 2)
         {
@@ -66,10 +68,18 @@ export class Lobby
                 this.sendToUsers("gameReady", client.id);
             }
         }
-        
-
+        console.log("lobby client ", this.clients.size)
 
     }
+    // public addSpectate(client: AuthenticatedSocket): void
+    // {
+    //     this.clients.set(client.id, client);
+    //     client.join(this.id);
+    //     client.data.lobby = this;
+    //     console.log("heerrreee")
+    //     console.log(this.id)
+    // }
+
 
     public startGame(data: any)
     {

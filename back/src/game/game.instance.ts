@@ -33,7 +33,7 @@ export class GameInstance
             }
         }
         this.settings = {
-            scoreToWin: 2,
+            scoreToWin: 7,
         }
     }
 
