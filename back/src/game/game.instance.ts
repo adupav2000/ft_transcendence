@@ -1,6 +1,7 @@
 import { Lobby } from "./lobby/lobby";
 import { AuthenticatedSocket, Ball, gameCollionInfoT, GameData, GameSettings, GameState, Player } from "./game.type";
 import { Interval } from "@nestjs/schedule";
+import { threadId } from "worker_threads";
 
 export class GameInstance
 {
@@ -32,7 +33,7 @@ export class GameInstance
             }
         }
         this.settings = {
-            scoreToWin: 5,
+            scoreToWin: 7,
         }
     }
 
@@ -42,9 +43,11 @@ export class GameInstance
     const player1PaddleZone:DOMRect = this.gameData.gameCollisionInfo.player1PaddleZone
     const player2PaddleZone:DOMRect = this.gameData.gameCollisionInfo.player2PaddleZone
     if (this.isCollision(ballZone, player1PaddleZone)) {
+        this.gameData.ball.x = this.gameData.ball.x + 2.5
         return true
     }
     if (this.isCollision(ballZone, player2PaddleZone)) {
+        this.gameData.ball.x = this.gameData.ball.x - 2.5
         return true
     }
     return false
@@ -53,19 +56,22 @@ export class GameInstance
 	checkYcollision(){
 		//CHECK IF THE BALL HITS THE TOP OR THE BOTTOM
 		const contactZone:DOMRect = this.gameData.gameCollisionInfo.ballZone
-		if (contactZone.bottom > this.gameData.gameCollisionInfo.innerHeight
-			|| contactZone.top < 0) {
-				return true
+		if (contactZone.bottom >= this.gameData.gameCollisionInfo.innerHeight){
+            this.gameData.ball.y = this.gameData.ball.y - 2.5
+            return true
+        }
+	    if(contactZone.top <= 0) {
+            this.gameData.ball.y = this.gameData.ball.y + 2.5
+            return true
 		}
 		return false
 	}
 
     checkXCollision(): boolean
-    {       
+    {
         if (this.gameData.gameCollisionInfo.ballZone.left < 0 ||
-            this.gameData.gameCollisionInfo.ballZone.right > this.gameData.gameCollisionInfo.innerWidth)
+            this.gameData.gameCollisionInfo.ballZone.right >= this.gameData.gameCollisionInfo.innerWidth)
             return true;
-        console.log(`Ball x ${this.gameData.gameCollisionInfo.ballZone.right} Inner width ${this.gameData.gameCollisionInfo.innerWidth }`)
         return false;
     }
 
@@ -73,63 +79,67 @@ export class GameInstance
 	{
 		//CHECK IF RECT1 HITS RECT2
 		return (
-			rect1.left < rect2.right &&
-			rect1.right > rect2.left &&
-			rect1.top < rect2.bottom &&
-			rect1.bottom > rect2.top
+			rect1.left <= rect2.right &&
+			rect1.right >= rect2.left &&
+			rect1.top <= rect2.bottom &&
+			rect1.bottom >= rect2.top
 			)
 	}
 
 	refreshBall()
 	{
         //console.log(this.gameData.gameCollisionInfo)
-        this.gameData.ball.dirX = this.checkPaddleCollision() ? this.gameData.ball.dirX * (-1) : this.gameData.ball.dirX
-        this.gameData.ball.dirY = this.checkYcollision() ? this.gameData.ball.dirY * (-1) : this.gameData.ball.dirY
         this.gameData.ball.x = this.gameData.ball.x + (this.gameData.ball.dirX * this.gameData.ball.speed * 30)
 		this.gameData.ball.y = this.gameData.ball.y + (this.gameData.ball.dirY * this.gameData.ball.speed * 30)
+        this.gameData.ball.dirX = this.checkPaddleCollision() ? this.gameData.ball.dirX * (-1) : this.gameData.ball.dirX
+        this.gameData.ball.dirY = this.checkYcollision() ? this.gameData.ball.dirY * (-1) : this.gameData.ball.dirY
 		this.gameData.ball.speed = this.checkPaddleCollision() ? this.gameData.ball.speed + 0.001 : this.gameData.ball.speed
 	}
+
+    handleGoal()
+    {
+        //this.state = GameState.Goal;
+        const winner = this.gameData.gameCollisionInfo.ballZone.left < 0 ? 1 : 0;
+        this.gameData.players[winner].score += 1;
+        //this.lobby.sendToUsers("goalScored", this.gameData.players[winner].id);
+        console.log(this.gameData.players[winner].score, this.settings.scoreToWin);
+        if (this.gameData.players[winner].score === this.settings.scoreToWin)
+        {
+            this.sendResult(winner);
+            this.state = GameState.Stopped;
+        }
+        this.restartRound();
+        //console.log(this.gameData.players);
+    }
 
     //@Interval(30)
     private emitUpdateLoop()
     {
-        if (this.state == GameState.Started)
+        if (this.state === GameState.Started )
         {
-            this.lobby.sendUpdate("collisionUpdate", this.gameData);
-            //console.log(this.gameData.players);
-            if (this.gameData.players.length > 1)
-                this.refreshBall()
-            if (this.checkXCollision())
+            // if(this.gameData.gameCollisionInfo.innerWidth === 0)
+            //     this.lobby.needUpdate("collisionUpdate", this.gameData);
+            if (this.checkXCollision() == true)
             {
-                const winner = this.gameData.ball.x < 0 ? 1 : 0;
-
-                this.gameData.players[winner].score++;
-                this.lobby.sendToUsers("goalScored", this.gameData.players[winner].id);
-                this.restartRound();
-                if (this.gameData.players[winner].score == this.settings.scoreToWin)
-                {
-                    this.sendResult(winner);
-                    this.state = GameState.Stopped;
-                }               
+                this.handleGoal()
             }
             else
             {
-                this.lobby.sendUpdate("stateUpdate", this.gameData);
+                if (this.gameData.players.length > 1)
+                    this.refreshBall()
+                this.lobby.sendUpdate("stateUpdate", this.gameData);   
+                this.lobby.sendUpdate("collisionUpdate", this.gameData);
             }
-
         }
 		if (this.gameData?.players?.length > 0)
-			setTimeout(() => this.emitUpdateLoop(), 30);
+			setTimeout(() => this.emitUpdateLoop(), 50);
 
     }
 
     sendResult(winnerIndex: number)
     {
-        const loserIndex = winnerIndex == 0 ? 1 : 0;
-        const loserSocket = this.lobby.clients[this.gameData.players[loserIndex].id];
-
-        loserSocket.to(this.lobby.id).emit('Victory', this.gameData.players[winnerIndex].id);
-        loserSocket.emit('Defeat');
+        console.log("fdfds")
+        this.lobby.sendToUsers('Result', this.gameData.players[winnerIndex].id);
     }
 
     restartRound()
@@ -153,11 +163,18 @@ export class GameInstance
         this.gameData.players[0].pos = 50;
         this.gameData.players[1].pos = 50;
         
+        this.gameData.players[0].pos = 50;
+        this.gameData.players[1].pos = 50;
+        setTimeout(() => {}, 500);
+        this.lobby.sendUpdate("stateUpdate", this.gameData);   
+        this.lobby.sendUpdate("collisionUpdate", this.gameData);
     }
 
-    public start()
+    public start(data: gameCollionInfoT)
     {
+		console.log(data);
         this.state = GameState.Started;
+        this.gameData.gameCollisionInfo = data;
         this.restartRound();
         this.emitUpdateLoop();
     }

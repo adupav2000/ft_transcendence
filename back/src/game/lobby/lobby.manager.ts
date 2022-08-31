@@ -52,7 +52,9 @@ export class LobbyManager
 
     public joinLobby(lobbyId: string, client: AuthenticatedSocket)
     {
-        if (this.lobbies[lobbyId]?.addClient(client) == undefined)
+        console.log('[id]',lobbyId)
+        console.log('lobby[id]', this.lobbies[lobbyId])
+        if (this.lobbies[lobbyId]?.addClient(client /*, 2eme argument ?*/) == undefined)
             throw new NotFoundException("This lobby does not exist anymore");
     }
     /*
@@ -88,6 +90,7 @@ export class LobbyManager
         }
         console.log(`Avalaible lobbies: ${this.avalaibleLobbies.length}`);
         this.lobbies.forEach((lobby, id) => {
+			console.log(lobby.nbPlayers);
             if (lobby.state == GameState.Stopped && lobby.nbPlayers == 0)
             {
                 this.lobbies.delete(id);

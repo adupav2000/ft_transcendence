@@ -2,16 +2,16 @@ import react from "react"
 import "../Components/Pong/pong.css"
 
 type propsType = {
-    playerScore:number,
-    computerScore:number
+    player1Score:number,
+    player2Score:number,
 }
 
 export default function Score(props:propsType)
 {
     return (
         <div className="score">
-            <div>{props.playerScore}</div>
-            <div>{props.computerScore}</div>
+            <div>{props.player1Score}</div>
+            <div>{props.player2Score}</div>
         </div>
     )
 }

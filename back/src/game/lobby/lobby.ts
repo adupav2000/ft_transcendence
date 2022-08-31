@@ -36,13 +36,16 @@ export class Lobby
             this.nbPlayers++;
             
             if (this.nbPlayers == 1)
-            client.emit("watingForOpponent");
-            this.sendToUsers("gameReady", "Game is ready");
+                client.emit("watingForOpponent");
+            else
+                this.sendToUsers("gameReady", "Game is ready");
         }
         */
         this.clients.set(client.id, client);
         client.join(this.id);
         client.data.lobby = this;
+        console.log("heerrreee")
+        console.log(this.id)
         
         if (this.nbPlayers < 2)
         {
@@ -62,18 +65,26 @@ export class Lobby
             else
             {
                 this.gameInstance.state = GameState.Started;
-                this.sendToUsers("gameReady", "Game is ready");
+                this.sendToUsers("gameReady", client.id);
             }
         }
-        
-
+        console.log("lobby client ", this.clients.size)
 
     }
+    // public addSpectate(client: AuthenticatedSocket): void
+    // {
+    //     this.clients.set(client.id, client);
+    //     client.join(this.id);
+    //     client.data.lobby = this;
+    //     console.log("heerrreee")
+    //     console.log(this.id)
+    // }
 
-    public startGame()
+
+    public startGame(data: any)
     {
         console.log('In startGame');
-        this.gameInstance.start();
+        this.gameInstance.start(data);
         this.state = GameState.Started;
     }
 
@@ -116,7 +127,12 @@ export class Lobby
 
     public playersId(): string[] { return this.gameInstance.playersId(); }
 
-    public sendUpdate(event: string, data: GameData) { this.server.to(this.id).emit(event, data); }
+    public sendUpdate(event: string, data: any) { this.server.to(this.id).emit(event, data); }
+
+    public needUpdate(event: string, data: GameData) { 
+		const [firstClient] = this.clients.keys()
+		this.server.to(firstClient).emit(event, data); 
+    }
 
     public sendToUsers(event: string, data: any) { this.server.to(this.id).emit(event, data); }
 
