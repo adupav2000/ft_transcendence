@@ -6,6 +6,11 @@ import { GameInstance } from "../game.instance";
 import { AuthenticatedSocket, GameState, Player } from "../game.type";
 import { Lobby } from "./lobby";
 
+type availableLobbiesT = [{
+    lobbyId: string;
+    playersId: string[];
+}]
+
 export class LobbyManager
 {
     @WebSocketServer()
@@ -65,10 +70,13 @@ export class LobbyManager
     * Va servir pour afficher toutes les parties en cours et les regarder
     * Gerer le cas ou il n'y a pas de parties en cours
     */
+   
+     
+
     public getActiveLobbies()
     {
-        let res: [{lobbyId: string, playersId: string[]}];
-
+        let res:{lobbyId: string, playersId: string[]}[] = [];
+        console.log(this.lobbies)
         this.lobbies.forEach((lobby, id) => {
             if (lobby.state == GameState.Started && lobby.nbPlayers == 2)
             {
@@ -78,6 +86,7 @@ export class LobbyManager
                 })
             }
         });
+        return res;
         
     }
 

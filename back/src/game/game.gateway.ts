@@ -65,6 +65,7 @@ export class GameGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
 	@SubscribeMessage('getActiveGames')
 	getActiveGames(client: AuthenticatedSocket)
 	{
+		console.log(this.lobbyManager.getActiveLobbies())
 		client.emit('activeGames', this.lobbyManager.getActiveLobbies());
 	}
 

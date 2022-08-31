@@ -50,3 +50,8 @@ export type updateInfoT = {
 	ball: ballInfoT,
 	gameCollionInfo:gameCollionInfoT
 }
+
+export type availableLobbiesT = [{
+    lobbyId: string;
+    playersId: string[];
+}]
