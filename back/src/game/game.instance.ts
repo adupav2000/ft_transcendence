@@ -2,14 +2,11 @@ import { Lobby } from "./lobby/lobby";
 import { AuthenticatedSocket, Ball, gameCollionInfoT, GameData, GameSettings, GameState, Player } from "./game.type";
 import { Interval } from "@nestjs/schedule";
 import { threadId } from "worker_threads";
+import { CLIENT_RENEG_WINDOW } from "tls";
 
 export class GameInstance
 {
-    private stateChanged = false;
-	private isEmittingUpdates = false;
-    
-    private gameData:       GameData;
-    public  state:          GameState;
+	private gameData:       GameData;
     private settings:       GameSettings;
 
     constructor(public lobby: Lobby) {
@@ -18,84 +15,20 @@ export class GameInstance
             ball: {
                 x: 50,
                 y: 50,
-                dirX: 0,
-                dirY: 0,
-                speed: 0.025,
-                delta: 0,
+                speed: 10,
+				radius: 20,
+				delta: {x: 0, y: 0},
             },
-            gameCollisionInfo: {
-                player1PaddleZone: null,
-                player2PaddleZone: null,
-                ballZone: null,
-                borderZone: null,
-                innerHeight: 0,
-                innerWidth: 0
-            }
+			state: GameState.Waiting,
         }
         this.settings = {
             scoreToWin: 7,
+			paddleHeight: 200,
+			paddleWidth: 50,
+			width: 1920,
+			height: 1080,
         }
-    }
-
-    checkPaddleCollision(){
-    //CHECK IF THE BALL HITS A PADLLE
-    const ballZone:DOMRect = this.gameData.gameCollisionInfo.ballZone
-    const player1PaddleZone:DOMRect = this.gameData.gameCollisionInfo.player1PaddleZone
-    const player2PaddleZone:DOMRect = this.gameData.gameCollisionInfo.player2PaddleZone
-    if (this.isCollision(ballZone, player1PaddleZone)) {
-        this.gameData.ball.x = this.gameData.ball.x + 2.5
-        return true
-    }
-    if (this.isCollision(ballZone, player2PaddleZone)) {
-        this.gameData.ball.x = this.gameData.ball.x - 2.5
-        return true
-    }
-    return false
-	}
-
-	checkYcollision(){
-		//CHECK IF THE BALL HITS THE TOP OR THE BOTTOM
-		const contactZone:DOMRect = this.gameData.gameCollisionInfo.ballZone
-		if (contactZone.bottom >= this.gameData.gameCollisionInfo.innerHeight){
-            this.gameData.ball.y = this.gameData.ball.y - 2.5
-            return true
-        }
-	    if(contactZone.top <= 0) {
-            this.gameData.ball.y = this.gameData.ball.y + 2.5
-            return true
-		}
-		return false
-	}
-
-    checkXCollision(): boolean
-    {
-        if (this.gameData.gameCollisionInfo.ballZone.left < 0 ||
-            this.gameData.gameCollisionInfo.ballZone.right >= this.gameData.gameCollisionInfo.innerWidth)
-            return true;
-        return false;
-    }
-
-	isCollision(rect1:DOMRect, rect2:DOMRect)
-	{
-		//CHECK IF RECT1 HITS RECT2
-		return (
-			rect1.left <= rect2.right &&
-			rect1.right >= rect2.left &&
-			rect1.top <= rect2.bottom &&
-			rect1.bottom >= rect2.top
-			)
-	}
-
-	refreshBall()
-	{
-        //console.log(this.gameData.gameCollisionInfo)
-        this.gameData.ball.x = this.gameData.ball.x + (this.gameData.ball.dirX * this.gameData.ball.speed * 30)
-		this.gameData.ball.y = this.gameData.ball.y + (this.gameData.ball.dirY * this.gameData.ball.speed * 30)
-        this.gameData.ball.dirX = this.checkPaddleCollision() ? this.gameData.ball.dirX * (-1) : this.gameData.ball.dirX
-        this.gameData.ball.dirY = this.checkYcollision() ? this.gameData.ball.dirY * (-1) : this.gameData.ball.dirY
-		this.gameData.ball.speed = this.checkPaddleCollision() ? this.gameData.ball.speed + 0.001 : this.gameData.ball.speed
-	}
-
+    }/*
     handleGoal()
     {
         //this.state = GameState.Goal;
@@ -111,28 +44,75 @@ export class GameInstance
         this.restartRound();
         //console.log(this.gameData.players);
     }
-
-    //@Interval(30)
-    private emitUpdateLoop()
+*/
+    checkGoals(nextPos): boolean
     {
-        if (this.state === GameState.Started )
+        if (nextPos.x - this.gameData.ball.radius < 0 ||
+			nextPos.x + this.gameData.ball.radius > this.settings.width)
+			return true;
+		return false
+    }
+
+	ballHitsLeftPaddel(nextPos: {x: number, y: number})
+	{
+		if (nextPos.y <= this.gameData.players[0].pos + this.settings.paddleHeight / 2 &&
+				nextPos.y >= this.gameData.players[0].pos - this.settings.paddleHeight / 2)
+		{
+			if (nextPos.x - this.gameData.ball.radius < this.settings.paddleWidth)
+			{
+				 //this.updateBall(this.gameData.ball.x, this.gameData.ball.y, (Math.random() * Math.PI) / 2 - Math.PI / 4);
+				return true;
+			}
+		}
+		return false;
+	}
+
+	ballHitsRightPaddel(nextPos: {x: number, y: number})
+	{
+		if (nextPos.y <= this.gameData.players[1].pos + this.settings.paddleHeight / 2 &&
+				nextPos.y >= this.gameData.players[1].pos - this.settings.paddleHeight / 2)
+		{
+			if (nextPos.x + this.gameData.ball.radius > this.settings.width - this.settings.paddleWidth)
+			{
+				return true;//return this.updateBall(this.gameData.ball.x, this.gameData.ball.y, (Math.random() * Math.PI) / 2 - Math.PI / 4 + Math.PI);
+			}
+		}
+		return false;
+	}
+
+	ballHitsTopOrBottom(nextPos: {x: number, y: number})
+	{
+		if (nextPos.y - this.gameData.ball.radius < 0 || nextPos.y + this.gameData.ball.radius > this.settings.height)
+			return true;
+		return false;
+	}
+
+    gameLoop()
+    {
+        if (this.gameData.state === GameState.Started)
         {
-            // if(this.gameData.gameCollisionInfo.innerWidth === 0)
-            //     this.lobby.needUpdate("collisionUpdate", this.gameData);
-            if (this.checkXCollision() == true)
+			const nextPos = {	x: this.gameData.ball.x + this.gameData.ball.delta.x,
+								y: this.gameData.ball.y + this.gameData.ball.delta.y };
+
+            if (this.checkGoals(nextPos) == true)
             {
-                this.handleGoal()
+				//handle goal
+				this.resetRound();
             }
-            else
-            {
-                if (this.gameData.players.length > 1)
-                    this.refreshBall()
-                this.lobby.sendUpdate("stateUpdate", this.gameData);   
-                this.lobby.sendUpdate("collisionUpdate", this.gameData);
-            }
+
+			if (this.ballHitsLeftPaddel(nextPos) || this.ballHitsRightPaddel(nextPos))
+			{
+				this.gameData.ball.delta.x *= -1;
+			}
+			else if (this.ballHitsTopOrBottom(nextPos))
+				this.gameData.ball.delta.y *= -1;
+			this.gameData.ball.x += this.gameData.ball.delta.x;
+			this.gameData.ball.y += this.gameData.ball.delta.y;
+            this.lobby.sendToUsers('updateBall', this.gameData.ball);
+            
         }
 		if (this.gameData?.players?.length > 0)
-			setTimeout(() => this.emitUpdateLoop(), 50);
+			setTimeout(() => this.gameLoop(), 30);
 
     }
 
@@ -141,74 +121,58 @@ export class GameInstance
         this.lobby.sendToUsers('Result', this.gameData.players[winnerIndex].id);
     }
 
-    restartRound()
-    {
-        var directionX = 0;
-		var directionY = 0;
-		while (Math.abs(directionX) <= 0.3 || Math.abs(directionX) >= 0.8)
-		{
-			const trigoDir:number = Math.random() * (0 - (2 * Math.PI))
-			directionX = Math.cos(trigoDir)
-			directionY = Math.sin(trigoDir)
-		}
-        this.gameData.ball = {
-            x: 50,
-            y: 50,
-            dirX: directionX,
-            dirY: directionY,
-            speed: 0.025,
-            delta: 0,
-        }
-        this.gameData.players[0].pos = 50;
-        this.gameData.players[1].pos = 50;
-        
-        this.gameData.players[0].pos = 50;
-        this.gameData.players[1].pos = 50;
-        setTimeout(() => {}, 500);
-        this.lobby.sendUpdate("stateUpdate", this.gameData);   
-        this.lobby.sendUpdate("collisionUpdate", this.gameData);
-    }
+	getDelta(speed: number, radian: number) {		return { x: Math.cos(radian) * speed, y: Math.sin(radian) * speed };	};
+
+	updateBall(x: number, y: number, radian: number)
+	{
+		this.gameData.ball.x = x;
+		this.gameData.ball.y = y;
+		this.gameData.ball.delta = this.getDelta((this.gameData.ball.speed *= 1.01), radian);
+
+		this.lobby.sendToUsers('updateBall', this.gameData.ball);
+	}
+
+	resetRound()
+	{
+		let radian = (Math.random()*  Math.PI) / 2 - Math.PI / 4;
+		
+		//1 chance on 2 to go left
+		if (Math.random() < 0.5)
+			radian += Math.PI;
+
+		this.updateBall(
+			this.settings.width / 2,
+			this.settings.height / 2,
+			radian)
+		this.gameData.state = GameState.Started;
+	}
 
     public start(data: gameCollionInfoT)
     {
-        this.state = GameState.Started;
-        this.gameData.gameCollisionInfo = data;
-        this.restartRound();
-        this.emitUpdateLoop();
+        this.gameData.state = GameState.Started;
+        this.gameLoop();
     }
 
     public stop()
     {
         this.gameData.players = [];
-        this.state = GameState.Stopped;
+        this.gameData.state = GameState.Stopped;
     }
 
-    public addPlayer(player: Player)
+    public addPlayer(clientId: string)
     {
-        this.gameData.players.push(player);
-    }
-
-    public playerMoved(client: AuthenticatedSocket, data: { id: string, position: number})
-    {
-        this.stateChanged = true;
-		for (let i = 0; i < this.gameData?.players.length; i++)
-		{
-			if (this.gameData.players[i].id == data.id)
-				this.gameData.players[i].pos = data.position;
+		const newPlayer: Player = {
+			id: clientId,
+			pos: this.settings.height / 2,
+			score: 0,
 		}
+        this.gameData.players.push(newPlayer);
     }
 
-    public changeCollisionInfo(client: AuthenticatedSocket, data: gameCollionInfoT){
-        this.stateChanged = true;
-        this.gameData.gameCollisionInfo = data
-    }
-
-    //Temporary
-    public ballMoved(client: AuthenticatedSocket, ball: Ball)
-    {
-        this.stateChanged = true;
-        this.gameData.ball = ball;
-    }
+	public sendReady()
+	{
+		this.lobby.sendToUsers("gameReady", this.gameData);
+	}
 
     public isPlayer(clientId: string): boolean
     {  
@@ -219,6 +183,17 @@ export class GameInstance
         }
         return false;
     }
+
+	public getPlayer(playerId: string)
+	{
+		let res: Player = null;
+
+		this.gameData.players.forEach((player) => {
+			if (player.id == playerId)
+				res = player;
+		})
+		return res;
+	}
 
     public playersId(): string[]
     {

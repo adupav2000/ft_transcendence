@@ -1,14 +1,11 @@
 
-export type gameStateT = {
-    watingForOpponent:boolean,
-    isPlaying:boolean,
-    isGameFinish:boolean,
-    invalidLobbyId: boolean,
-    scoreToWin:number,
-    playerScore:number,
-    computerScore:number
-    winnerId: string
-}
+
+export enum GameState {
+	Started,
+	Stopped,
+	Waiting,
+	Goal,
+  }
 
 export type gameDataT = {
 	time:string,
@@ -17,6 +14,41 @@ export type gameDataT = {
     player2id:number,
 	player1score:number,
 	player2score:number
+}
+
+export interface Player 
+{ 
+    id: string,
+    pos: number,
+    score: number
+}
+
+export interface Paddle {
+	height: number,
+	width: number,
+}
+
+export interface Ball {
+	x: number,
+	y: number,
+  speed: number,
+  delta: { x: number, y: number},
+	radius: number
+}
+
+export interface GameData{
+  players: Player[],
+  ball: Ball,
+  state: GameState
+}
+
+export interface GameSettings {
+  scoreToWin: number,
+  paddleWidth:	number,
+  paddleHeight:	number,
+  width: number,
+  height: number,
+  
 }
 
 export type ballInfoT = {

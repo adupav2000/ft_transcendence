@@ -8,13 +8,17 @@ export interface Player
     score: number
 }
 
+export interface Paddle {
+	height: number,
+	width: number,
+}
+
 export interface Ball {
 	x: number,
 	y: number,
-  dirX: number,
-  dirY: number,
   speed: number,
-	delta: number
+  delta: {x: number, y: number},
+	radius: number
 }
 
 export interface gameCollionInfoT {
@@ -29,11 +33,15 @@ export interface gameCollionInfoT {
 export interface GameData{
   players: Player[],
   ball: Ball,
-  gameCollisionInfo:gameCollionInfoT
+  state: GameState
 }
 
 export interface GameSettings {
   scoreToWin: number,
+  paddleWidth:	number,
+  paddleHeight:	number,
+  width: number,
+  height: number,
   
 }
 

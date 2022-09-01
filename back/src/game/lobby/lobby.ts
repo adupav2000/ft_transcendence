@@ -8,17 +8,16 @@ export class Lobby
 {
     public readonly id:             string = v4();
     public          nbPlayers:      number = 0;
-    public readonly inviteMode:     boolean;
     public          state:          GameState = GameState.Stopped;
+    public readonly inviteMode:     boolean;
 
-    //public readonly players:        Map<string, Player> = new Map<string, Player>();
     public readonly gameInstance:   GameInstance = new GameInstance(this);
 
-    public         clients:        Map<string, AuthenticatedSocket> = new Map<string, AuthenticatedSocket>();
+    public         clients:        	Map<string, AuthenticatedSocket> = new Map<string, AuthenticatedSocket>();
 
     constructor    ( private server: Server ) {}
 
-    public addClient(client: AuthenticatedSocket, player:Player): void
+    public addClient(client: AuthenticatedSocket): void
     {
         this.clients.set(client.id, client);
         client.join(this.id);
@@ -27,33 +26,29 @@ export class Lobby
         
         if (this.nbPlayers < 2)
         {
-            let newPlayer: Player = {
-                id: client.id,
-                pos: 50,
-                score: 0
-            }
-            this.gameInstance.addPlayer(newPlayer);
+            this.gameInstance.addPlayer(client.id);
             this.nbPlayers++;
             
             if (this.nbPlayers == 1)
             {
-                client.emit("watingForOpponent");
-                this.gameInstance.state = GameState.Waiting; 
+                client.emit("waitingForOpponent");
             }
             else
             {
-                this.gameInstance.state = GameState.Started;
-                this.sendToUsers("gameReady", client.id);
+                this.gameInstance.sendReady();
             }
         }
         console.log("lobby client ", this.clients.size)
     }
 
-    public startGame(data: any)
+    public startGame()
     {
-        console.log('In startGame');
-        this.gameInstance.start(data);
-        this.state = GameState.Started;
+		if (this.state == GameState.Started)
+			return ;
+		this.state = GameState.Started;
+        console.log('In startGame');	
+        this.gameInstance.resetRound();
+		this.gameInstance.gameLoop();
     }
 
     public removeClient(client: AuthenticatedSocket)
@@ -87,4 +82,8 @@ export class Lobby
 
     public sendToUsers(event: string, data: any) { this.server.to(this.id).emit(event, data); }
 
+	public getUser(client: AuthenticatedSocket)
+	{
+		return this.gameInstance.getPlayer(client.id);
+	}
 }

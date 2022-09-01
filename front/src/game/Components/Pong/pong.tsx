@@ -1,10 +1,10 @@
-import React, {useState, useEffect} from "react"
+import React, {useState, useEffect, useRef} from "react"
 import Ball from "../../Elements/ball"
 import Paddle from "../../Elements/paddle"
 import Score from "../../Elements/score"
 import * as utils from "../../GameUtils/GameUtils"
 import "./pong.css"
-import { playerT, playersT, ballInfoT, gameCollionInfoT, gameStateT, updateInfoT, gameDataT} from "../../type"
+import { playerT, playersT, ballInfoT, gameCollionInfoT, updateInfoT, gameDataT, GameSettings, GameData, GameState} from "../../type"
 import {ThreeDots} from "react-loader-spinner";
 import * as socketManager from "../../socketManager"
 import { io, Socket } from 'socket.io-client'
@@ -13,6 +13,7 @@ let socket:Socket
 
 export default function Pong()
 {
+/*
 	const [players, setPlayers] = React.useState<playersT>()
 	const [ball, setBall] = React.useState<ballInfoT>()
 	const [input, setInput] = React.useState<string>("")
@@ -142,7 +143,7 @@ export default function Pong()
 		socketManager.initiateSocket("http://localhost:8002")
 		socketManager.listenGame(handleWait, handleStart, handleUpdate, handleGameResult, handleError)
 		socket = socketManager.getSocket()
-
+		ull
 		console.log(socket)
 		return () => {
 			socketManager.cleanUp()
@@ -176,6 +177,165 @@ export default function Pong()
 		<Paddle id={index == 0 ? "player1" : "player2"} key={index} className={index == 0 ? "left" : "right"} position={elem.pos} player={index == 0 ? true :false}/>
 		)
 
+*/
+	let context: CanvasRenderingContext2D;
+	const canvasRef = useRef<HTMLCanvasElement>(null);
+	const [canvas, setCanvas] = useState<HTMLCanvasElement>();
+	const [isDrawing, setDrawing] = useState(false);
+	
+	const [gameData, setGameData] = useState<GameData>({
+		players: [{
+			id: "",
+			pos: 1080 / 2,
+			score: 0,
+		}, 
+		{
+			id: "",
+			pos: 1080 / 2,
+			score: 0,
+
+		}],
+		ball : {
+			x: 1920 / 2,
+			y: 1080 / 2,
+			speed: 0.01,
+			delta: {x: 0, y: 0},
+			radius: 10,
+		},
+		state: GameState.Waiting,
+	});
+
+	const [settings, setSettings] = useState<GameSettings>({
+		scoreToWin: 5,
+		paddleWidth: 50,
+		paddleHeight: 200,
+		width: 1920,
+		height: 1080,
+	});
+
+	function setContext(newContext: CanvasRenderingContext2D){ context = newContext; }
+	
+	useEffect(() => {
+		const canvas = canvasRef.current;
+		if (!canvas)
+			return ;
+/*
+		canvas.width = window.innerWidth; // Get parent width
+		canvas.height = window.innerHeight; // Get parent height
+		canvas.style.width = `${window.innerWidth}px`;
+		canvas.style.height = `${window.innerHeight}px`;
+	*/
+		const newContext = canvas.getContext("2d");
+		if (!newContext)
+			return ;
+
+		const handleResize = () => {
+			canvas.height = window.innerHeight;
+			canvas.width = window.innerWidth;
+		}	
+		handleResize();
+		window.addEventListener('resize', handleResize);
+
+		setCanvas(canvas);
+		setContext(newContext)
+
+		socket = io("http://localhost:8002");
+		socket.on('updateBall', (ball) => {
+			gameData.ball = ball;
+			draw(0, 0);
+		})
+		socket.on('updatePaddle', ({playerId, newPos}) => {
+			updatePaddle(playerId, newPos);
+		})
+		socket.on('gameReady', (data: GameData) => {
+			gameData.ball = data.ball;
+			gameData.players = data.players;
+			gameData.state = GameState.Started;
+			socket.emit("startGame");
+		})
+
+		
+
+	}, [])
+
+	function updatePaddle(playerId: string, newPos: number)
+	{
+		if (gameData.players[0].id == playerId)
+			gameData.players[0].pos = newPos;
+		else
+			gameData.players[1].pos = newPos;
+	}
+
+	function handleMouseMove(event:React.MouseEvent<HTMLCanvasElement>)
+	{
+		//HANDLE THE MOUSE MOVE EVENT ON THE GAME AREA
+		if (gameData.state == GameState.Started)
+		{
+			let value: number = event.clientY;
+
+			if (value + settings.paddleHeight / 2 >= settings.height)
+				value = settings.height - settings.paddleHeight / 2;
+			else if (value - settings.paddleHeight / 2 <= 0)
+				value = settings.paddleHeight / 2;
+			socket.emit("playerMoved", value);
+			/*socketManager.sendPosition({
+				id: socket!.id,
+				position: value,
+				score: 0,
+			})
+			*/
+		}
+	}
+
+	function draw(x: number, y: number) {
+		
+		console.log(gameData.players[0].pos);
+		if (y > 1000)
+			return ;
+		if (!context)
+			return ;
+		context.clearRect(
+			0,
+			0,
+			1920,
+			1080,
+		);
+		context.beginPath();
+
+		context.fillRect(0,
+			gameData.players[0].pos - settings.paddleHeight / 2,
+			settings.paddleWidth,
+			settings.paddleHeight);
+
+		context.fillRect(settings.width - settings.paddleWidth - 40, // ?????
+			gameData.players[1].pos - settings.paddleHeight / 2,
+			settings.paddleWidth,
+			settings.paddleHeight);
+
+		context.fillStyle = "white";
+		context?.arc(gameData.ball.x, gameData.ball.y, 20, 0, 2 * Math.PI)
+
+		context?.fill();
+		context?.closePath();
+
+		//setTimeout(() => { draw(x +20, y + 20) }, 50)
+	}
+
+	return (
+		<div id="canvasDiv">
+		<canvas
+		className="pong"
+		width="1920"
+		height="1080"
+		ref={canvasRef}
+		onMouseMove={handleMouseMove}
+		
+		/>
+		<button className="buttonStart" onClick={() => socket.emit('joinedQueue') /*draw(1920 / 2, 1080 / 2)*/}></button>
+		</div>
+	);
+	
+/*
 	return (
 		<div className="pong" onMouseMove={handleMouseMove}>
 			{
@@ -243,4 +403,5 @@ export default function Pong()
 			<Ball isPlaying={gameState.isPlaying} x={ball?.x} y={ball?.y}/>
 		</div>
 	)
+*/
 }

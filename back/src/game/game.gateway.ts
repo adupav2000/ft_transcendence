@@ -37,10 +37,10 @@ export class GameGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
 	}
 
 	@SubscribeMessage('createLobby')
-	createLobby(client: AuthenticatedSocket, player:Player)
+	createLobby(client: AuthenticatedSocket)
 	{
 		let lobby = this.lobbyManager.createLobby();
-		lobby.addClient(client, player);
+		lobby.addClient(client);
 
 		client.emit("lobbyCreated", "Successful creation");
 	}
@@ -49,7 +49,7 @@ export class GameGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
 	joiningQueue(client: AuthenticatedSocket, player:Player)
 	{
 		console.log(`Client ${client.id} joined queue`)
-		this.lobbyManager.joinQueue(client, player);
+		this.lobbyManager.joinQueue(client);
 	}
 
 	@SubscribeMessage('spectacteGame')
@@ -71,27 +71,19 @@ export class GameGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
 
 
 	@SubscribeMessage('startGame')
-	launchGame(client: AuthenticatedSocket, data: any)
+	launchGame(client: AuthenticatedSocket)
 	{
-		client.data.lobby.startGame(data);
+		client.data.lobby.startGame();
 	}
 
-	@SubscribeMessage('ballPosChanged')
-	handleBallPosition(client: Socket, ball: Ball)
-	{
-        console.log('In ballchanged');
-		//Add ball function
-	}
+	@SubscribeMessage('playerMoved')
+	handlePlayerPosition(client: AuthenticatedSocket, newPos: number) {
 
-
-	@SubscribeMessage('playerPosChanged')
-	handlePlayerPosition(client: AuthenticatedSocket, data: { id: string, position: number}) {
-		client.data.lobby?.gameInstance.playerMoved(client, data);
+		const player: Player = client.data.lobby?.getUser(client);
+		if (!player)
+			return ;
+		player.pos = newPos;
+		client.data.lobby.sendToUsers('updatePaddle', {playerId: client.id, newPos: newPos});
 
 	}
-	@SubscribeMessage('gameCollisionChange')
-	handleGameCollision(client: AuthenticatedSocket, data: gameCollionInfoT) {
-		client.data.lobby?.gameInstance.changeCollisionInfo(client, data);
-	}
-
 }

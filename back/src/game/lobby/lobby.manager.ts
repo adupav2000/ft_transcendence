@@ -40,7 +40,7 @@ export class LobbyManager
         return lobby;
     }
 
-    public joinQueue(client: AuthenticatedSocket, player:Player)
+    public joinQueue(client: AuthenticatedSocket)
     {
         let lobby: Lobby;
 
@@ -52,7 +52,7 @@ export class LobbyManager
             this.avalaibleLobbies.push(lobby);
         }
 
-        lobby.addClient(client, player);
+        lobby.addClient(client);
     }
 
     public joinLobby(lobbyId: string, client: AuthenticatedSocket)
@@ -60,7 +60,7 @@ export class LobbyManager
         console.log(`Spectacte lobby ${lobbyId}`);
         
         const lobby: Lobby = this.lobbies.get(lobbyId);
-        if (lobby?.addClient(client, null) == undefined)
+        if (lobby?.addClient(client) == undefined)
             throw new NotFoundException("This lobby does not exist anymore");
         else
             console.log('Spectacte success');
@@ -90,7 +90,7 @@ export class LobbyManager
         
     }
 
-    //Deletes deletes stopped lobbies every 5 minutes
+    //Deletes stopped lobbies every 5 minutes
     @Interval(60 * 1000)
     private lobbiesCleaner(): void
     {

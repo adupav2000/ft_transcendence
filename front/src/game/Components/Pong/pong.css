@@ -10,9 +10,15 @@
 }
 
 .pong {
-    margin: 0;
+    /*margin: 50px 50px 50px 50px;*/
     background-color: black;
-    height: 100vh;    
+    height: 100%;
+    width: 100%;
+}
+
+#canvasDiv {
+	width: 800;
+	height: 1250;
 }
 
 .paddle {
