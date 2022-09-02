@@ -22,29 +22,30 @@ export class GameInstance
 			state: GameState.Waiting,
         }
         this.settings = {
-            scoreToWin: 7,
+            scoreToWin: 3,
 			paddleHeight: 200,
 			paddleWidth: 50,
 			width: 1920,
 			height: 1080,
         }
-    }/*
-    handleGoal()
+	}
+    handleGoal(nextPos)
     {
-        //this.state = GameState.Goal;
-        const winner = this.gameData.gameCollisionInfo.ballZone.left < 0 ? 1 : 0;
+        this.gameData.state = GameState.Goal;
+        const winner = nextPos.x - this.gameData.ball.radius < 0 ? 1 : 0;
         this.gameData.players[winner].score += 1;
-        //this.lobby.sendToUsers("goalScored", this.gameData.players[winner].id);
+        
+		this.lobby.sendToUsers("goalScored", this.gameData.players);
         console.log(this.gameData.players[winner].score, this.settings.scoreToWin);
-        if (this.gameData.players[winner].score === this.settings.scoreToWin)
+        
+		if (this.gameData.players[winner].score === this.settings.scoreToWin)
         {
-            this.sendResult(winner);
-            this.state = GameState.Stopped;
+            this.gameData.state = GameState.Stopped;
+			this.lobby.sendToUsers('Result', this.gameData.players[winner].id);
         }
-        this.restartRound();
         //console.log(this.gameData.players);
     }
-*/
+
     checkGoals(nextPos): boolean
     {
         if (nextPos.x - this.gameData.ball.radius < 0 ||
@@ -96,29 +97,25 @@ export class GameInstance
 
             if (this.checkGoals(nextPos) == true)
             {
-				//handle goal
+				this.handleGoal(nextPos)
 				this.resetRound();
             }
-
-			if (this.ballHitsLeftPaddel(nextPos) || this.ballHitsRightPaddel(nextPos))
+			else
 			{
-				this.gameData.ball.delta.x *= -1;
+				if (this.ballHitsLeftPaddel(nextPos) || this.ballHitsRightPaddel(nextPos))
+					this.gameData.ball.delta.x *= -1;
+				else if (this.ballHitsTopOrBottom(nextPos))
+					this.gameData.ball.delta.y *= -1;
+
+				this.gameData.ball.x += this.gameData.ball.delta.x;
+				this.gameData.ball.y += this.gameData.ball.delta.y;
+				this.lobby.sendToUsers('updateBall', this.gameData.ball);
 			}
-			else if (this.ballHitsTopOrBottom(nextPos))
-				this.gameData.ball.delta.y *= -1;
-			this.gameData.ball.x += this.gameData.ball.delta.x;
-			this.gameData.ball.y += this.gameData.ball.delta.y;
-            this.lobby.sendToUsers('updateBall', this.gameData.ball);
             
         }
-		if (this.gameData?.players?.length > 0)
+		if (this.gameData.state != GameState.Stopped)
 			setTimeout(() => this.gameLoop(), 30);
 
-    }
-
-    sendResult(winnerIndex: number)
-    {
-        this.lobby.sendToUsers('Result', this.gameData.players[winnerIndex].id);
     }
 
 	getDelta(speed: number, radian: number) {		return { x: Math.cos(radian) * speed, y: Math.sin(radian) * speed };	};
@@ -134,6 +131,8 @@ export class GameInstance
 
 	resetRound()
 	{
+		if (this.gameData.state == GameState.Stopped)
+			return ;
 		let radian = (Math.random()*  Math.PI) / 2 - Math.PI / 4;
 		
 		//1 chance on 2 to go left

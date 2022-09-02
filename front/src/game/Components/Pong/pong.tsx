@@ -4,7 +4,7 @@ import Paddle from "../../Elements/paddle"
 import Score from "../../Elements/score"
 import * as utils from "../../GameUtils/GameUtils"
 import "./pong.css"
-import { playerT, playersT, ballInfoT, gameCollionInfoT, updateInfoT, gameDataT, GameSettings, GameData, GameState} from "../../type"
+import { playerT, playersT, ballInfoT, gameCollionInfoT, updateInfoT, gameDataT, GameSettings, GameData, GameState, Player} from "../../type"
 import {ThreeDots} from "react-loader-spinner";
 import * as socketManager from "../../socketManager"
 import { io, Socket } from 'socket.io-client'
@@ -181,7 +181,6 @@ export default function Pong()
 	let context: CanvasRenderingContext2D;
 	const canvasRef = useRef<HTMLCanvasElement>(null);
 	const [canvas, setCanvas] = useState<HTMLCanvasElement>();
-	const [isDrawing, setDrawing] = useState(false);
 	
 	const [gameData, setGameData] = useState<GameData>({
 		players: [{
@@ -205,7 +204,7 @@ export default function Pong()
 		state: GameState.Waiting,
 	});
 
-	const [settings, setSettings] = useState<GameSettings>({
+	const [gameSettings, setGameSettings] = useState<GameSettings>({
 		scoreToWin: 5,
 		paddleWidth: 50,
 		paddleHeight: 200,
@@ -254,9 +253,25 @@ export default function Pong()
 			socket.emit("startGame");
 		})
 
-		
+		socket.on('goalScored', (players: Player[]) => {
+			gameData.players = players;
+		})
+
+
+		socket.on('gameOver', (winnerId: string) => {
+			handleGameOver(winnerId);
+		})
+
 
 	}, [])
+
+	function handleGameOver(winnerId: string)
+	{
+		if (winnerId == socket.id)
+			console.log("You win");
+		else
+			console.log("You lose");
+	}
 
 	function updatePaddle(playerId: string, newPos: number)
 	{
@@ -273,10 +288,10 @@ export default function Pong()
 		{
 			let value: number = event.clientY;
 
-			if (value + settings.paddleHeight / 2 >= settings.height)
-				value = settings.height - settings.paddleHeight / 2;
-			else if (value - settings.paddleHeight / 2 <= 0)
-				value = settings.paddleHeight / 2;
+			if (value + gameSettings.paddleHeight / 2 >= gameSettings.height)
+				value = gameSettings.height - gameSettings.paddleHeight / 2;
+			else if (value - gameSettings.paddleHeight / 2 <= 0)
+				value = gameSettings.paddleHeight / 2;
 			socket.emit("playerMoved", value);
 			/*socketManager.sendPosition({
 				id: socket!.id,
@@ -303,14 +318,14 @@ export default function Pong()
 		context.beginPath();
 
 		context.fillRect(0,
-			gameData.players[0].pos - settings.paddleHeight / 2,
-			settings.paddleWidth,
-			settings.paddleHeight);
+			gameData.players[0].pos - gameSettings.paddleHeight / 2,
+			gameSettings.paddleWidth,
+			gameSettings.paddleHeight);
 
-		context.fillRect(settings.width - settings.paddleWidth - 40, // ?????
-			gameData.players[1].pos - settings.paddleHeight / 2,
-			settings.paddleWidth,
-			settings.paddleHeight);
+		context.fillRect(gameSettings.width - gameSettings.paddleWidth - 40, // ?????
+			gameData.players[1].pos - gameSettings.paddleHeight / 2,
+			gameSettings.paddleWidth,
+			gameSettings.paddleHeight);
 
 		context.fillStyle = "white";
 		context?.arc(gameData.ball.x, gameData.ball.y, 20, 0, 2 * Math.PI)
@@ -323,6 +338,10 @@ export default function Pong()
 
 	return (
 		<div id="canvasDiv">
+		{
+			gameData.state == GameState.Started &&
+			<Score player1Score={gameData.players?.at(0)?.score!} player2Score={gameData.players?.at(1)?.score!}></Score>
+		}	
 		<canvas
 		className="pong"
 		width="1920"
