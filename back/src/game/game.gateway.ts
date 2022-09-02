@@ -1,10 +1,7 @@
-import { Logger } from '@nestjs/common';
 import { OnGatewayConnection, OnGatewayDisconnect, OnGatewayInit, SubscribeMessage, WebSocketGateway, WebSocketServer, WsResponse } from '@nestjs/websockets';
 import { Socket, Server } from 'socket.io';
-import { string } from 'yargs';
 import { LobbyManager } from './lobby/lobby.manager';
-import { AuthenticatedSocket, Ball, gameCollionInfoT, Player } from './game.type';
-import { GameInstance } from './game.instance';
+import { AuthenticatedSocket, Player } from './game.type';
 
 
 @WebSocketGateway(8002, { cors: '*' })

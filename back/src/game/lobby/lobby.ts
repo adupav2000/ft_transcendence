@@ -56,19 +56,17 @@ export class Lobby
         client.data.lobby = null;
         client.leave(this.id);
         this.clients.delete(client.id);
+		this.gameInstance.stop();
         if (this.gameInstance.isPlayer(client.id))
         {
             this.clients.forEach((user, id) => {
                 this.clients.delete(id);
             })
 
-            this.gameInstance.stop();
             this.nbPlayers = 0;
             this.state = GameState.Stopped;          
             this.sendToUsers('gameStopped', "");  
-        }
-               
-
+        }          
     }
 
     public playersId(): string[] { return this.gameInstance.playersId(); }

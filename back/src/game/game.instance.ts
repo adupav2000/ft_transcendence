@@ -1,8 +1,6 @@
 import { Lobby } from "./lobby/lobby";
-import { AuthenticatedSocket, Ball, gameCollionInfoT, GameData, GameSettings, GameState, Player } from "./game.type";
-import { Interval } from "@nestjs/schedule";
-import { threadId } from "worker_threads";
-import { CLIENT_RENEG_WINDOW } from "tls";
+import { GameData, GameSettings, GameState, Player } from "./game.type";
+
 
 export class GameInstance
 {
@@ -29,6 +27,7 @@ export class GameInstance
 			height: 1080,
         }
 	}
+
     handleGoal(nextPos)
     {
         this.gameData.state = GameState.Goal;
@@ -41,9 +40,8 @@ export class GameInstance
 		if (this.gameData.players[winner].score === this.settings.scoreToWin)
         {
             this.gameData.state = GameState.Stopped;
-			this.lobby.sendToUsers('Result', this.gameData.players[winner].id);
+			this.lobby.sendToUsers('gameOver', this.gameData.players[winner].id);
         }
-        //console.log(this.gameData.players);
     }
 
     checkGoals(nextPos): boolean
@@ -146,12 +144,6 @@ export class GameInstance
 		this.gameData.state = GameState.Started;
 	}
 
-    public start(data: gameCollionInfoT)
-    {
-        this.gameData.state = GameState.Started;
-        this.gameLoop();
-    }
-
     public stop()
     {
         this.gameData.players = [];
@@ -168,10 +160,7 @@ export class GameInstance
         this.gameData.players.push(newPlayer);
     }
 
-	public sendReady()
-	{
-		this.lobby.sendToUsers("gameReady", this.gameData);
-	}
+	public sendReady()	{ this.lobby.sendToUsers("gameReady", this.gameData); }
 
     public isPlayer(clientId: string): boolean
     {  
