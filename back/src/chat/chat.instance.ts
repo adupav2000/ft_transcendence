@@ -1,5 +1,5 @@
-import { Lobby } from "./lobby/lobby";
-import { GameData, GameSettings, GameState, Player } from "./game.type";
+import { Lobby } from "./channel/channel";
+import { GameData, GameSettings, GameState, Player } from "./chat.type";
 
 
 export class GameInstance
