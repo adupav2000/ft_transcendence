@@ -1,9 +1,9 @@
 import { NotFoundException } from "@nestjs/common";
 import { Cron, Interval } from "@nestjs/schedule";
+import { InjectRepository } from "@nestjs/typeorm";
 import { WebSocketServer } from "@nestjs/websockets";
-import { Server } from "socket.io";
-import { GameInstance } from "../chat.instance";
-import { AuthenticatedSocket } from "../chat.type";
+import { Repository } from "typeorm";
+import { AuthenticatedSocket } from "../types/channel.type";
 import { Channel } from "./channel";
 
 export class ChannelManager

@@ -2,10 +2,10 @@ import { OnGatewayConnection, OnGatewayDisconnect, OnGatewayInit, SubscribeMessa
 import { Socket, Server } from 'socket.io';
 import { Channel } from './channel/channel';
 import { ChannelManager } from './channel/channel.manager';
-import { AuthenticatedSocket } from './chat.type';
+import { AuthenticatedSocket } from './types/channel.type';
 
 
-@WebSocketGateway(8002, { cors: '*' })
+@WebSocketGateway(8002, { cors: '*', namespace: 'chat' })
 export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
 {
 

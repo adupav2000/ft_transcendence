@@ -1,10 +1,11 @@
 import { v4 } from "uuid";
 import { Server } from "socket.io";
-import { AuthenticatedSocket } from "../chat.type";
+import { AuthenticatedSocket, Message } from "../types/channel.type";
 
 export class Channel
 {
-    public readonly inviteMode:     boolean;
+    public readonly isPrivate:      boolean = false;
+    private         password:       string;
 
     public         clients:        	Map<string, AuthenticatedSocket> = new Map<string, AuthenticatedSocket>();
 
@@ -37,7 +38,7 @@ export class Channel
         return clientsIdArray;
     }
 
-    public sendMessage(clientId: string, message: string) { this.server.to(this.id).emit("msgToChannel", {sender: clientId, msg: message})}
+    public sendMessage(clientId: string, message: string) { this.server.to(this.id).emit("msgToChannel", {sender: clientId, content: message})}
 
     public sendToUsers(event: string, data: any) { this.server.to(this.id).emit(event, data); }
 

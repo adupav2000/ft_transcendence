@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
-import { GameGateway } from './chat.gateway';
-import { LobbyManager } from './channel/channel.manager';
+import { ChatGateway } from './chat.gateway';
+import { ChannelManager } from './channel/channel.manager';
 
 @Module({
-    providers: [LobbyManager, GameGateway]
+    providers: [ChannelManager, ChatGateway]
 })
-export class GameModule {}
+export class ChatModule {}
