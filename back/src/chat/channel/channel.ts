@@ -7,7 +7,7 @@ export class Channel
     public readonly isPrivate:      boolean = false;
     private         password:       string;
 
-    public         clients:        	Map<string, AuthenticatedSocket> = new Map<string, AuthenticatedSocket>();
+    public          clients:        	Map<string, AuthenticatedSocket> = new Map<string, AuthenticatedSocket>();
 
     constructor    ( private server: Server, public readonly id: string ) {}
 

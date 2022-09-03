@@ -1,5 +1,5 @@
 import { NotFoundException } from "@nestjs/common";
-import { Cron, Interval } from "@nestjs/schedule";
+import { Interval } from "@nestjs/schedule";
 import { InjectRepository } from "@nestjs/typeorm";
 import { WebSocketServer } from "@nestjs/websockets";
 import { Repository } from "typeorm";

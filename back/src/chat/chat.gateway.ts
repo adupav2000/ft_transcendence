@@ -69,7 +69,7 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
 	getActiveChannels(client: AuthenticatedSocket)
 	{
 		console.log(this.channelManager.getActiveChannels())
-		client.emit('activeGames', this.channelManager.getActiveChannels());
+		client.emit('activeChannels', this.channelManager.getActiveChannels());
 	}
 
 }
