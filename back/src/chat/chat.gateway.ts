@@ -54,6 +54,18 @@ export class ChatGateway implements OnGatewayInit, OnGatewayConnection, OnGatewa
 		console.log(`Client ${client.id} joined channel ${channelId}`)
 	}
 
+	@SubscribeMessage('deleteChannel')
+	deleteChannel(client: AuthenticatedSocket, channelId: string)
+	{
+		try
+		{
+			this.channelManager.deleteChannel(channelId);
+		}
+		catch (error) { client.emit('channelNotFound', error.message ) }
+		console.log(`Client ${client.id} deleted channel ${channelId}`)
+
+	}
+
 	@SubscribeMessage('sendMessage')
 	sendMessage(client: AuthenticatedSocket, channelId: string, message: string)
 	{

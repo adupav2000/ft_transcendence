@@ -1,10 +1,9 @@
 import { NotFoundException } from "@nestjs/common";
 import { Interval } from "@nestjs/schedule";
-import { InjectRepository } from "@nestjs/typeorm";
 import { WebSocketServer } from "@nestjs/websockets";
-import { Repository } from "typeorm";
-import { AuthenticatedSocket } from "../types/channel.type";
+import { AuthenticatedSocket, Message } from "../types/channel.type";
 import { Channel } from "./channel";
+import { ChannelsService } from "./channel.service";
 
 export class ChannelManager
 {
@@ -13,7 +12,9 @@ export class ChannelManager
 
     private readonly channels: Map<string, Channel> = new Map<string, Channel>();
 
-    constructor() { }
+    constructor(
+        private readonly channelsService: ChannelsService
+    ) { }
 
     public initializeSocket(client: AuthenticatedSocket): void
     {
@@ -30,7 +31,12 @@ export class ChannelManager
         let channel = new Channel(this.server, channelId);
 
         this.channels.set(channel.id, channel);
-
+        this.channelsService.createChannel( //change to just the name
+            {
+                name: channelId,
+                isPrivate: false,
+                password: "",
+            });
         return channel;
     }
 
@@ -39,9 +45,32 @@ export class ChannelManager
         const channel: Channel = this.channels.get(channelId);
         if (channel?.addClient(client) == undefined)
             throw new NotFoundException("This channel does not exist anymore");
+        this.channelsService.addClient(channelId, 1) //change to real id
         channel.sendToUsers("joinedChannel", client.id);
     }
+
+    public deleteChannel(channelId: string)
+    {
+        const channel: Channel = this.channels.get(channelId);
+        if (!channel == undefined)
+            throw new NotFoundException("This channel does not exist");
+
+        channel.clients.forEach((client) => {
+            client.leave(channel.id);
+        })
+        this.channels.delete(channelId);
+        this.channelsService.deleteChannel(channelId);
+    }
    
+    public  sendMessage(channelId: string, msg: Message)
+    {
+        const channel: Channel = this.channels.get(channelId);
+        if (!channel == undefined)
+            throw new NotFoundException("This channel does not exist");
+        //channel.sendMessage(msg);
+        this.channelsService.addMessage(channelId, msg);
+    }
+
     public getChannel(channelId: string)
     {
         const channel: Channel = this.channels.get(channelId);
@@ -49,6 +78,7 @@ export class ChannelManager
             throw new NotFoundException("This channel does not exist anymore");
         return channel;
     }
+
 
     public getActiveChannels()
     {
