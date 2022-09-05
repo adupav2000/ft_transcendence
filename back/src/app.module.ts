@@ -9,6 +9,7 @@ import { ConfigModule } from '@nestjs/config';
 import { PassportModule } from '@nestjs/passport';
 import { DataSource } from "typeorm"
 import { MatchModule } from './match/match.module';
+import { ChatModule } from './chat/chat.module';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { MatchModule } from './match/match.module';
   PassportModule.register({ session: true }),
   MatchModule,
   AuthModule,
+  ChatModule,
   ],
   controllers: [AppController],
   providers: [AppService],

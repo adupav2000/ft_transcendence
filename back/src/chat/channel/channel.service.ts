@@ -2,7 +2,7 @@ import { NotFoundException } from "@nestjs/common";
 import { InjectRepository } from "@nestjs/typeorm";
 import { Repository } from "typeorm";
 import { Channel } from "../../typeorm/Chat";
-import { createChannelDto } from "../dto/channel.dto";
+import { CreateChannelDto } from "../dto/channel.dto";
 import { ChannelClient, Message } from "../types/channel.type";
 
 export class ChannelsService {
@@ -11,7 +11,12 @@ export class ChannelsService {
         private readonly channelRepository: Repository<Channel>
     ){}
 
+    findAll() {
+        return this.channelRepository.find();
+    }
+
     findOneById(name: string){
+        console.log("In find", name);
         return this.channelRepository.findOneBy({ name })
     }
 
@@ -46,7 +51,7 @@ export class ChannelsService {
         channel.clients.splice(userIndex , 1)
     }
 
-    async createChannel(dto: createChannelDto) {
+    async createChannel(dto: CreateChannelDto) {
         const   newChannel = this.channelRepository.create(dto);
         await   this.channelRepository.save(newChannel);
     }

@@ -1,8 +1,15 @@
 import { Module } from '@nestjs/common';
 import { ChatGateway } from './chat.gateway';
 import { ChannelManager } from './channel/channel.manager';
+import { ChatController } from './chat.controller';
+import { Channel } from 'src/typeorm';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { ChannelsService } from './channel/channel.service';
 
 @Module({
-    providers: [ChannelManager, ChatGateway]
+    imports: [
+        TypeOrmModule.forFeature([Channel])],
+    controllers: [ChatController],
+    providers: [ChannelManager, ChannelsService, ChatGateway]
 })
 export class ChatModule {}

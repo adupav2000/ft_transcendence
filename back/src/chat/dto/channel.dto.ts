@@ -1,12 +1,9 @@
 import { IsNotEmpty} from "class-validator";
-import { ChannelClient } from "../types/channel.type";
+import { ChannelClient, Message } from "../types/channel.type";
 
-export class createChannelDto {
+export class CreateChannelDto {
     @IsNotEmpty()
     name: string;
-
-    @IsNotEmpty()
-    clients: ChannelClient[];
         
     @IsNotEmpty()
     isPrivate: boolean;
@@ -14,4 +11,20 @@ export class createChannelDto {
     @IsNotEmpty()
     password: string;
     
+}
+
+export class NewClientDto {
+    @IsNotEmpty()
+    channelName: string;
+
+    @IsNotEmpty()
+    clientId: number;
+}
+
+export class NewMessageDto {
+    @IsNotEmpty()
+    channelName: string;
+
+    @IsNotEmpty()
+    message: Message;
 }
