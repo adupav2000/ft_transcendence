@@ -91,11 +91,10 @@ export default function App()
 					<Route path="Chat/*" element={<Chat/>}/>
 					<Route path="Pong/*" element={<Pong/>}/>
 					<Route path="Settings" element={<Settings/>}/>
-					<Route path="NotFound" element={<ErrorPage/>}/>
 					<Route path="/Profile/:login" element={<Profile/>}/>
 				</Route>
 					<Route path="/Login" element={<Login/> }/>
-				
+					<Route path="*" element={<ErrorPage/>}/>
 			</Routes>
 			<Footer/>
 		</div>
